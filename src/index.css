@@ -1,0 +1,278 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Fira Code", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Global Reset with Futuristic iOS Light Theme */
+body {
+  font-family: var(--font-sans);
+  background-color: #F4F7FC !important;
+  color: #1D1D1F !important;
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Futuristic iOS Fluid Aura Spheres in Background (Light Theme Edition) */
+body::before {
+  content: "";
+  position: fixed;
+  top: -10%;
+  left: -10%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(0, 122, 255, 0.09) 0%, rgba(0, 122, 255, 0) 70%);
+  z-index: -1;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: floatOrb1 35s infinite alternate ease-in-out;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  bottom: -10%;
+  right: -10%;
+  width: 55vw;
+  height: 55vw;
+  background: radial-gradient(circle, rgba(175, 82, 222, 0.08) 0%, rgba(175, 82, 222, 0) 70%);
+  z-index: -1;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: floatOrb2 28s infinite alternate ease-in-out;
+}
+
+@keyframes floatOrb1 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(8%, 12%) scale(1.1); }
+}
+
+@keyframes floatOrb2 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-8%, -8%) scale(1.05); }
+}
+
+/* Overriding Vintage Theme Colors to Glassmorphic iOS Light Styles */
+
+/* 1. Main Background */
+.bg-\[\#F5F2ED\] {
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(30px) !important;
+  -webkit-backdrop-filter: blur(30px) !important;
+}
+
+/* 2. Secondary Panel Background (Widgets) */
+.bg-\[\#EBE8E3\] {
+  background: rgba(245, 247, 252, 0.8) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 3. Text Color Corrections */
+.text-\[\#1A1A1A\] {
+  color: #1D1D1F !important;
+}
+
+.text-\[\#8C8984\] {
+  color: #86868B !important;
+}
+
+/* 4. Borders */
+.border-\[\#1A1A1A\] {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* 5. Custom Corner Rounding (The iPhone Vibe) */
+@media (min-width: 768px) {
+  .max-w-\[1400px\] {
+    border-radius: 32px !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.08) !important;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.65) !important;
+    backdrop-filter: blur(40px) !important;
+    -webkit-backdrop-filter: blur(40px) !important;
+  }
+
+  header {
+    border-top-left-radius: 32px !important;
+    border-top-right-radius: 32px !important;
+  }
+
+  aside {
+    border-bottom-left-radius: 32px !important;
+  }
+}
+
+header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  background: rgba(255, 255, 255, 0.4) !important;
+}
+
+aside {
+  background: rgba(245, 247, 252, 0.5) !important;
+}
+
+/* Override input styling to look modern iOS-like */
+input, select, textarea {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-radius: 14px !important;
+  color: #1D1D1F !important;
+  padding: 10px 14px !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: #007AFF !important;
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.12) !important;
+  outline: none !important;
+}
+
+/* Pill & Modern Buttons override */
+button {
+  border-radius: 14px !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+button:active {
+  transform: scale(0.97) !important;
+}
+
+/* Redefine primary dark background elements (like original black buttons) */
+.bg-\[\#1A1A1A\] {
+  background: linear-gradient(135deg, #007AFF 0%, #0056B3 100%) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.25) !important;
+}
+
+.bg-\[\#1A1A1A\]:hover {
+  background: linear-gradient(135deg, #1A8CFF 0%, #0066D6 100%) !important;
+  box-shadow: 0 6px 20px rgba(0, 122, 255, 0.35) !important;
+}
+
+/* Override the vintage red accent to futuristic neon red */
+.bg-\[\#C4432A\] {
+  background: linear-gradient(135deg, #FF3B30 0%, #D11A11 100%) !important;
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.2) !important;
+}
+
+.text-\[\#C4432A\] {
+  color: #FF3B30 !important;
+}
+
+.border-\[\#C4432A\] {
+  border-color: rgba(255, 59, 48, 0.3) !important;
+}
+
+/* Hover background changes */
+.hover\:bg-stone-200:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  color: #1D1D1F !important;
+}
+
+.hover\:bg-\[\#D9D6D0\]:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Light background alerts to semi-transparent modern containers */
+.bg-\[\#FDF2F0\] {
+  background: rgba(255, 59, 48, 0.08) !important;
+  border: 1px solid rgba(255, 59, 48, 0.15) !important;
+  color: #FF3B30 !important;
+}
+
+.bg-\[\#FEF3C7\] {
+  background: rgba(255, 149, 0, 0.08) !important;
+  border: 1px solid rgba(255, 149, 0, 0.15) !important;
+  color: #FF9500 !important;
+}
+
+.text-\[\#92400E\] {
+  color: #FF9500 !important;
+}
+
+.border-\[\#D97706\] {
+  border-color: rgba(255, 149, 0, 0.25) !important;
+}
+
+/* Success status alerts */
+.bg-\[\#E6F4EA\], .bg-\[rgba\(22\,163\,74\,0\.1\)\] {
+  background: rgba(52, 199, 89, 0.08) !important;
+  border: 1px solid rgba(52, 199, 89, 0.15) !important;
+  color: #34C759 !important;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.01) !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.08) !important;
+  border-radius: 9999px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Animations */
+.fade-in {
+  animation: iOSFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes iOSFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Table fixes for light mode readability */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th {
+  background: rgba(0, 0, 0, 0.02) !important;
+  color: #86868B !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
+}
+
+tr:hover td {
+  background: rgba(0, 0, 0, 0.01) !important;
+}
+
+/* Card layout wrapper rounding */
+.print-card {
+  border: 1px solid rgba(0, 0, 0, 0.04) !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+}

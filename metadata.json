@@ -1,0 +1,6 @@
+{
+  "name": "HospLinen Pro",
+  "description": "Hệ thống quản lý đồ vải bệnh viện thông minh - HospLinen Pro giúp theo dõi tồn kho, nhập xuất kho, phân vai trò người dùng, thu gom đồ bẩn, bàn giao nhà giặt và đối chiếu thất thoát.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
