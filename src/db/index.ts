@@ -6,6 +6,17 @@ const { Pool } = pg;
 
 // Function to create a new connection pool.
 export const createPool = () => {
+  const dbUrl = process.env.DATABASE_URL;
+  const isPostgresUrl = dbUrl && (dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://'));
+  if (isPostgresUrl) {
+    return new Pool({
+      connectionString: dbUrl,
+      connectionTimeoutMillis: 15000,
+      ssl: dbUrl.includes('supabase') || dbUrl.includes('neon.tech')
+        ? { rejectUnauthorized: false }
+        : undefined,
+    });
+  }
   return new Pool({
     host: process.env.SQL_HOST,
     user: process.env.SQL_USER,

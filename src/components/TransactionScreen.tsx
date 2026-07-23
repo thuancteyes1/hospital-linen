@@ -493,7 +493,6 @@ export default function TransactionScreen({
                     {userPermissions.thuhoi && <option value="thuhoi">Thu hồi (Khoa trả về Kho chính)</option>}
                     {userPermissions.xuat && <option value="xuat">Xuất cho khoa (Xuất từ Kho chính đi)</option>}
                     {userPermissions.huy && <option value="huy">Xuất hủy (Hủy rách hỏng từ Kho chính)</option>}
-                    {userPermissions.dc && <option value="dc">Điều chuyển (Khoa lâm sàng qua Khoa lâm sàng)</option>}
                   </select>
                 </div>
 

@@ -11,6 +11,7 @@ export interface LinenItem {
   kp: number; // Tồn khoa phòng (computed)
   mn: number; // Tồn tối thiểu
   hinhAnh?: string; // Link hình ảnh đồ vải
+  trang?: string; // Trang in Bill tổng (VD: "Trang 1", "Trang 2", "Trang 3", "Trang 4")
 }
 
 export type DeptAllocation = [string, number]; // [DepartmentName, Quantity]
@@ -94,7 +95,6 @@ export const DEPARTMENTS = [
   "Nội trú sản T8",
   "SPA",
   "ELITE",
-  "KKB SPK VIP",
   "NTĐK L6",
   "Khách",
   "Khách (VIP/Khoa ngoài)"
@@ -109,6 +109,14 @@ export const LINEN_GROUPS = [
   "Khác"
 ];
 
+export const LINEN_PAGES = [
+  "Trang 1",
+  "Trang 2",
+  "Trang 3",
+  "Trang 4",
+  "Trang 5"
+];
+
 export interface WardDeliverySlip {
   id: string;
   dept: string;
@@ -117,7 +125,10 @@ export interface WardDeliverySlip {
   originalSlipId?: string; // Mã phiếu dơ gốc đầu tiên phát sinh nợ
   originalCreatedAt?: string; // Ngày/giờ nhận đồ dơ gốc đầu tiên
   receiver?: string;
-  status: 'pending' | 'verified_dirty' | 'laundry_received' | 'laundry_returned' | 'completed' | 'confirmed';
+  status: 'pending' | 'verified_dirty' | 'laundry_received' | 'laundry_returned' | 'clean_returned_pending_ward' | 'completed' | 'confirmed';
+  rejectionNote?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
   confirmedAt?: string;
   confirmedBy?: string;
   laundryDispatchId?: string; // Links to laundry dispatch when sent to laundry

@@ -3,6 +3,7 @@
   "appId": "1:8541083354:web:63fafa80315673e3c577e3",
   "apiKey": "AIzaSyDIiyE8QpYmMZvRi7KPSPCG5YVkFuMWzRY",
   "authDomain": "iron-transport-998sv.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-hosplinenpro-a79132f0-1385-4d89-9ef8-83163b385768",
   "storageBucket": "iron-transport-998sv.firebasestorage.app",
   "messagingSenderId": "8541083354",
   "measurementId": "",

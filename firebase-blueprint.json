@@ -1,0 +1,43 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "System accounts and user profiles",
+      "properties": {
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "number" },
+        "dept": { "type": "string" }
+      }
+    },
+    "linenItems": {
+      "title": "Linen Items",
+      "description": "Linen catalog and items",
+      "properties": {
+        "ma": { "type": "string" },
+        "ten": { "type": "string" },
+        "nhom": { "type": "string" },
+        "kc": { "type": "string" },
+        "mn": { "type": "string" }
+      }
+    },
+    "deliverySlips": {
+      "title": "Delivery Slips",
+      "description": "Delivery slips for wards",
+      "properties": {
+        "dept": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "laundryDispatches": {
+      "title": "Laundry Dispatches",
+      "description": "Dispatches to external laundry factory",
+      "properties": {
+        "contractor": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    }
+  }
+}

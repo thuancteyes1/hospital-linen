@@ -22,6 +22,7 @@ export const linenItems = pgTable('linen_items', {
   kc: integer('kc').notNull().default(0), // Central stock (Tồn kho chính)
   mn: integer('mn').notNull().default(20), // Minimum limit
   hinhAnh: text('hinh_anh'),
+  trang: text('trang').default('Trang 1'),
   createdAt: timestamp('created_at').defaultNow()
 });
 

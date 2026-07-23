@@ -126,44 +126,11 @@ export const INITIAL_ROLES: Role[] = [
 ];
 
 export const INITIAL_USERS: User[] = [
-  { name: 'Nguyễn Văn An', email: 'an.nv@hospital.vn', role: 0, dept: 'Kho trung tâm', status: 'active' },
-  { name: 'Trần Thị Bình', email: 'binh.tt@hospital.vn', role: 1, dept: 'Kho trung tâm', status: 'active' },
-  { name: 'Lê Thị Cẩm', email: 'cam.lt@hospital.vn', role: 2, dept: 'NICU', status: 'active' },
-  { name: 'Phạm Văn Dũng', email: 'dung.pv@hospital.vn', role: 2, dept: 'Gây mê hồi sức', status: 'active' },
-  { name: 'Võ Thị Elan', email: 'elan.vt@hospital.vn', role: 3, dept: 'Tất cả', status: 'active' },
-  { name: 'Huỳnh Văn Phúc', email: 'phuc.hv@hospital.vn', role: 4, dept: 'Tất cả', status: 'inactive' },
-  { name: 'Nguyễn Thị Mai', email: 'mai.dd@hospital.vn', role: 2, dept: 'Khoa Cấp cứu đa khoa', status: 'active' },
-  { name: 'Trần Thị Hoa', email: 'hoa.dd@hospital.vn', role: 2, dept: 'NICU', status: 'active' },
-  { name: 'Lê Thị Ngọc', email: 'ngoc.dd@hospital.vn', role: 2, dept: 'Phòng sanh', status: 'active' },
-  { name: 'Võ Văn Tài', email: 'tai.hl@hospital.vn', role: 5, dept: 'Khoa Cấp cứu đa khoa', status: 'active' },
-  { name: 'Phạm Thị Lan', email: 'lan.hl@hospital.vn', role: 5, dept: 'Gây mê hồi sức', status: 'active' },
-  { name: 'Trần Thị Buồng', email: 'buongphong@hospital.vn', role: 2, dept: 'Khách', status: 'active' },
-  { name: 'Nhân viên Xưởng giặt Cty', email: 'xuonggiat@hospital.vn', role: 6, dept: 'Xưởng giặt Cty', status: 'active' },
-  { name: 'Test 1', email: 'test1@hospital.vn', role: 0, dept: 'Kho trung tâm', status: 'active' },
-  { name: 'Test 2', email: 'test2@hospital.vn', role: 1, dept: 'Kho trung tâm', status: 'active' },
-  { name: 'Test 3', email: 'test3@hospital.vn', role: 2, dept: 'Khoa Cấp cứu đa khoa', status: 'active' },
-  { name: 'Test 4', email: 'test4@hospital.vn', role: 5, dept: 'Khoa Cấp cứu đa khoa', status: 'active' },
-  { name: 'Test 5', email: 'test5@hospital.vn', role: 6, dept: 'Xưởng giặt Cty', status: 'active' },
-  { name: 'Test 6', email: 'test6@hospital.vn', role: 3, dept: 'Tất cả', status: 'active' }
+  { name: 'Quản trị viên', email: 'admin@hospital.vn', role: 0, dept: 'Kho trung tâm', status: 'active' }
 ];
 
 export const INITIAL_ACCOUNTS: Account[] = [
-  { username: 'Admin', email: 'admin@hospital.vn', password: 'admin123', name: 'Quản trị viên', isAdmin: true, status: 'active', userIdx: 0 },
-  { username: 'an.nv', email: 'an.nv@hospital.vn', password: '123456', name: 'Nguyễn Văn An', isAdmin: false, status: 'active', userIdx: 0 },
-  { username: 'binh.tt', email: 'binh.tt@hospital.vn', password: '123456', name: 'Trần Thị Bình', isAdmin: false, status: 'active', userIdx: 1 },
-  { username: 'mai.dd', email: 'mai.dd@hospital.vn', password: 'dieuduong1', name: 'Nguyễn Thị Mai', isAdmin: false, status: 'active', userIdx: 6 },
-  { username: 'hoa.dd', email: 'hoa.dd@hospital.vn', password: 'dieuduong2', name: 'Trần Thị Hoa', isAdmin: false, status: 'active', userIdx: 7 },
-  { username: 'ngoc.dd', email: 'ngoc.dd@hospital.vn', password: 'dieuduong3', name: 'Lê Thị Ngọc', isAdmin: false, status: 'active', userIdx: 8 },
-  { username: 'tai.hl', email: 'tai.hl@hospital.vn', password: 'holy1234', name: 'Võ Văn Tài', isAdmin: false, status: 'active', userIdx: 9 },
-  { username: 'lan.hl', email: 'lan.hl@hospital.vn', password: 'holy1234', name: 'Phạm Thị Lan', isAdmin: false, status: 'active', userIdx: 10 },
-  { username: 'buongphong', email: 'buongphong@hospital.vn', password: 'buongphong123', name: 'Trần Thị Buồng (NV Buồng phòng)', isAdmin: false, status: 'active', userIdx: 11 },
-  { username: 'ctygiat', email: 'xuonggiat@hospital.vn', password: 'giat123', name: 'Nhân viên Xưởng giặt (Cty)', isAdmin: false, status: 'active', userIdx: 12 },
-  { username: 'test1', email: 'test1@hospital.vn', password: '123456', name: 'Test 1', isAdmin: false, status: 'active', userIdx: 13 },
-  { username: 'test2', email: 'test2@hospital.vn', password: '123456', name: 'Test 2', isAdmin: false, status: 'active', userIdx: 14 },
-  { username: 'test3', email: 'test3@hospital.vn', password: '123456', name: 'Test 3', isAdmin: false, status: 'active', userIdx: 15 },
-  { username: 'test4', email: 'test4@hospital.vn', password: '123456', name: 'Test 4', isAdmin: false, status: 'active', userIdx: 16 },
-  { username: 'test5', email: 'test5@hospital.vn', password: '123456', name: 'Test 5', isAdmin: false, status: 'active', userIdx: 17 },
-  { username: 'test6', email: 'test6@hospital.vn', password: '123456', name: 'Test 6', isAdmin: false, status: 'active', userIdx: 18 }
+  { username: 'Admin', email: 'admin@hospital.vn', password: 'admin123', name: 'Quản trị viên', isAdmin: true, status: 'active', userIdx: 0 }
 ];
 
 export const INITIAL_DIFF_ITEMS = [
