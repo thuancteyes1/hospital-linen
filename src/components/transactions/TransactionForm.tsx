@@ -394,15 +394,37 @@ export default function TransactionForm({
             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
               {formLines.map((line, idx) => {
                 const stockInfo = line.ma ? getLiveStock(line.ma) : { label: 'Tồn kho', qty: 0 };
+
+                let availableItems = items;
+                if (txType === 'thuhoi' || txType === 'dc') {
+                  if (!fromDept) {
+                    availableItems = [];
+                  } else {
+                    availableItems = items.filter(i => {
+                      const s = getLiveStock(i.ma);
+                      return s.qty > 0 || i.ma === line.ma;
+                    });
+                  }
+                }
+
                 return (
                   <div key={idx} className="flex gap-2 items-end bg-[#EBE8E3]/30 p-2 border border-[#1A1A1A]/10 rounded-lg">
                     <div className="flex-1">
                       <label className="block text-[8px] uppercase tracking-wider text-[#8C8984] mb-0.5">Sản phẩm đồ vải</label>
                       <select value={line.ma} onChange={e => updateLine(idx, 'ma', e.target.value)} className="w-full bg-[#EBE8E3] border border-[#1A1A1A] p-1.5 text-xs focus:outline-none">
-                        <option value="">-- Chọn mặt hàng --</option>
-                        {items.map(it => (
-                          <option key={it.ma} value={it.ma}>[{it.ma}] {it.ten}</option>
-                        ))}
+                        {!fromDept && (txType === 'thuhoi' || txType === 'dc') ? (
+                          <option value="">-- Vui lòng chọn khoa giao trước --</option>
+                        ) : (txType === 'thuhoi' || txType === 'dc') && availableItems.length === 0 ? (
+                          <option value="">-- Khoa này hiện không có đồ vải tồn kho --</option>
+                        ) : (
+                          <option value="">-- Chọn mặt hàng --</option>
+                        )}
+                        {availableItems.map(it => {
+                          const itemStock = (txType === 'thuhoi' || txType === 'dc') && fromDept ? getLiveStock(it.ma).qty : null;
+                          return (
+                            <option key={it.ma} value={it.ma}>[{it.ma}] {it.ten} {itemStock !== null ? `- Tồn: ${itemStock}` : ''}</option>
+                          );
+                        })}
                       </select>
                     </div>
 
