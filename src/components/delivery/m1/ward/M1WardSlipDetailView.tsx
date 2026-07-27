@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Check, Printer } from 'lucide-react';
+import { X, Check, Printer, Bed, RefreshCw, Send } from 'lucide-react';
 import { WardDeliverySlip, LinenItem } from '../../../../types';
 import PrintBillModal, { PrintBillData } from '../../utils/PrintBillModal';
 
@@ -103,7 +103,8 @@ export default function M1WardSlipDetailView({
         <div className="p-4 bg-amber-50/80 border-2 border-amber-400 rounded-xl space-y-2 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black text-amber-900 uppercase flex items-center gap-1.5 font-bold">
-              🛏️ PHIẾU ĐỒ VẢI KHÁCH VIP (NV BUỒNG PHÒNG)
+              <Bed className="w-4 h-4 text-amber-800 shrink-0" />
+              <span>PHIẾU ĐỒ VẢI KHÁCH VIP (NV BUỒNG PHÒNG)</span>
             </span>
             {(activeSlip.guestName || activeSlip.guestRoom) && (
               <span className="text-xs font-bold text-amber-900 bg-amber-200/80 px-2.5 py-0.5 rounded-lg border border-amber-300">
@@ -123,10 +124,11 @@ export default function M1WardSlipDetailView({
                 onClick={() => handleCreateGuestBillRiêng(activeSlip)}
                 className="w-full py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                🚀 TẠO BILL RIÊNG GIAO CTY GIẶT (ĐỒ KHÁCH)
+                <Send className="w-4 h-4 shrink-0" />
+                <span>TẠO BILL RIÊNG GIAO CTY GIẶT (ĐỒ KHÁCH)</span>
               </button>
               <p className="text-[10px] text-amber-800 text-center mt-1">
-                * Đồ khách VIP được tách thành Bill riêng with ảnh chụp đính kèm, không gộp chung vào Kho Dơ Tổng.
+                * Đồ khách VIP được tách thành Bill riêng với ảnh chụp đính kèm, không gộp chung vào Kho Dơ Tổng.
               </p>
             </div>
           )}
@@ -142,7 +144,8 @@ export default function M1WardSlipDetailView({
         <div className="p-4 bg-indigo-50/80 border-2 border-indigo-400 rounded-xl space-y-2 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black text-indigo-900 uppercase flex items-center gap-1.5 font-bold">
-              🔄 PHIẾU GỬI GIẶT LẠI (REWASH)
+              <RefreshCw className="w-4 h-4 text-indigo-700 shrink-0" />
+              <span>PHIẾU GỬI GIẶT LẠI (REWASH)</span>
             </span>
             <span className="text-[10px] font-bold text-indigo-900 bg-indigo-200/80 px-2.5 py-0.5 rounded-lg border border-indigo-300 font-bold">
               Hao hụt Kho Sạch • Chuyển vào Kho Dơ

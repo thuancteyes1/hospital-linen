@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Upload, Trash2 } from 'lucide-react';
 import { LinenItem, LINEN_GROUPS, LINEN_PAGES } from '../../types';
 
 interface LinenStockEditModalProps {
@@ -9,9 +10,6 @@ interface LinenStockEditModalProps {
 }
 
 export default function LinenStockEditModal({ onClose, onSubmit, item, items }: LinenStockEditModalProps) {
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
   const [editMa, setEditMa] = useState(item.ma);
   const [editTen, setEditTen] = useState(item.ten);
   const [editNhom, setEditNhom] = useState(item.nhom);
@@ -20,6 +18,20 @@ export default function LinenStockEditModal({ onClose, onSubmit, item, items }: 
   const [editKc, setEditKc] = useState(item.kc);
   const [editHinhAnh, setEditHinhAnh] = useState(item.hinhAnh || '');
   const [editError, setEditError] = useState('');
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        setEditHinhAnh(dataUrl);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +73,7 @@ export default function LinenStockEditModal({ onClose, onSubmit, item, items }: 
               <h3 className="font-serif font-black text-lg text-[#1A1A1A]">Sửa Thông Tin Đồ Vải</h3>
               <p className="text-[11px] text-[#8C8984]">Mã gốc: {item.ma}</p>
             </div>
-            <button onClick={onClose} className="text-[#8C8984] hover:text-[#1A1A1A] text-lg font-bold">&times;</button>
+            <button onClick={onClose} className="text-[#8C8984] hover:text-[#1A1A1A] text-lg font-bold cursor-pointer">&times;</button>
           </div>
 
           {editError && <div className="mb-4 p-2.5 border border-[#C4432A] bg-[#FDF2F0] text-[11px] text-[#C4432A] font-semibold">{editError}</div>}
@@ -100,12 +112,32 @@ export default function LinenStockEditModal({ onClose, onSubmit, item, items }: 
               </div>
             </div>
             <div>
-              <label className="block text-[10px] uppercase tracking-widest font-bold text-[#1A1A1A] mb-1">Link hình ảnh (Tùy chọn)</label>
-              <input type="url" placeholder="Để trống hệ thống sẽ tự động tạo ảnh minh họa" value={editHinhAnh} onChange={e => setEditHinhAnh(e.target.value)} className="w-full bg-[#EBE8E3] border border-[#1A1A1A] p-2 text-xs focus:outline-none" />
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-[#1A1A1A] mb-1">Hình ảnh đại diện</label>
+              {editHinhAnh ? (
+                <div className="flex items-center gap-3 bg-white p-2 border border-[#1A1A1A] rounded">
+                  <img src={editHinhAnh} alt="Preview" className="w-12 h-12 object-cover rounded border border-stone-200" referrerPolicy="no-referrer" />
+                  <div className="flex-1 flex gap-2">
+                    <input type="file" accept="image/jpeg,image/png,image/jpg,image/webp" id="edit-modal-image-file" className="hidden" onChange={handleImageFileChange} />
+                    <label htmlFor="edit-modal-image-file" className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded cursor-pointer flex items-center gap-1">
+                      <Upload className="w-3.5 h-3.5" /> Đổi ảnh
+                    </label>
+                    <button type="button" onClick={() => setEditHinhAnh('')} className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-[11px] font-bold rounded cursor-pointer flex items-center gap-1">
+                      <Trash2 className="w-3.5 h-3.5" /> Xóa
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <input type="file" accept="image/jpeg,image/png,image/jpg,image/webp" id="edit-modal-image-file" className="hidden" onChange={handleImageFileChange} />
+                  <label htmlFor="edit-modal-image-file" className="w-full py-2.5 bg-white hover:bg-stone-100 border border-[#1A1A1A] text-xs font-bold text-stone-800 rounded cursor-pointer flex items-center justify-center gap-2">
+                    <Upload className="w-4 h-4 text-blue-600" /> Tải ảnh từ tệp (JPG, PNG)
+                  </label>
+                </div>
+              )}
             </div>
             <div className="flex gap-2 justify-end pt-3 border-t border-[#1A1A1A] border-dashed">
-              <button type="button" onClick={onClose} className="px-4 py-2 border border-[#1A1A1A] text-xs font-semibold uppercase tracking-wider hover:bg-[#EBE8E3]">Hủy bỏ</button>
-              <button type="submit" className="px-4 py-2 bg-[#1A1A1A] text-[#F5F2ED] text-xs font-semibold uppercase hover:bg-emerald-700 hover:border-emerald-700 border border-[#1A1A1A]">Lưu Thay Đổi</button>
+              <button type="button" onClick={onClose} className="px-4 py-2 border border-[#1A1A1A] text-xs font-semibold uppercase tracking-wider hover:bg-[#EBE8E3] cursor-pointer">Hủy bỏ</button>
+              <button type="submit" className="px-4 py-2 bg-[#1A1A1A] text-[#F5F2ED] text-xs font-semibold uppercase hover:bg-emerald-700 hover:border-emerald-700 border border-[#1A1A1A] cursor-pointer font-bold">Lưu Thay Đổi</button>
             </div>
           </form>
         </div>

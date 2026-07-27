@@ -65,10 +65,22 @@ export default function LinenStockSubscreen({
     return '';
   });
 
+  // Helper to get allocation quantity for a specific department
+  const getDeptAllocQty = (itemMa: string, deptName: string) => {
+    if (!deptName) return 0;
+    const allocs = detailAllocations[itemMa] || [];
+    const normTarget = deptName.replace(/^Khoa\s+/i, '').trim().toLowerCase();
+    const exact = allocs.find(([d]) => d === deptName);
+    if (exact) return exact[1] || 0;
+    const normMatch = allocs.find(([d]) => d.replace(/^Khoa\s+/i, '').trim().toLowerCase() === normTarget);
+    if (normMatch) return normMatch[1] || 0;
+    return 0;
+  };
+
   // Determine focused department
   const focusDept = useMemo(() => {
-    if (selectedLocation && selectedLocation !== 'kho') {
-      return selectedLocation;
+    if (selectedLocation) {
+      return selectedLocation === 'kho' ? '' : selectedLocation;
     }
     if (userDept && userDept !== 'Kho trung tâm' && userDept !== 'Tất cả' && userDept !== 'Tất cả (Không giới hạn)') {
       const normalizedUserDept = userDept.replace(/^Khoa\s+/i, '');
@@ -107,7 +119,7 @@ export default function LinenStockSubscreen({
     });
   }, [items, detailAllocations]);
 
-  // Filtering list
+  // Filtering list: When a department is selected or focused, ONLY show items allocated to that department (> 0)
   const filteredItems = useMemo(() => {
     let list = [...itemTotals];
     if (searchQuery.trim()) {
@@ -120,15 +132,14 @@ export default function LinenStockSubscreen({
     if (selectedPage) {
       list = list.filter(d => (d.trang || 'Trang 1') === selectedPage);
     }
-    if (selectedLocation) {
-      if (selectedLocation === 'kho') {
-        list = list.filter(d => d.kc > 0);
-      } else {
-        list = list.filter(d => (detailAllocations[d.ma] || []).some(alloc => alloc[0] === selectedLocation && alloc[1] > 0));
-      }
+    if (selectedLocation === 'kho') {
+      list = list.filter(d => d.kc > 0);
+    } else if (focusDept) {
+      // Hide all linens that do NOT exist in the selected department
+      list = list.filter(d => getDeptAllocQty(d.ma, focusDept) > 0);
     }
     return list;
-  }, [itemTotals, searchQuery, selectedGroup, selectedPage, selectedLocation, detailAllocations]);
+  }, [itemTotals, searchQuery, selectedGroup, selectedPage, selectedLocation, focusDept, detailAllocations]);
 
   // Sorting
   const handleSort = (col: typeof sortCol) => {
@@ -496,8 +507,7 @@ export default function LinenStockSubscreen({
                   <td className="py-2.5 px-4 text-right">
                     {focusDept ? (
                       (() => {
-                        const deptAlloc = (detailAllocations[d.ma] || []).find(alloc => alloc[0] === focusDept);
-                        const deptQty = deptAlloc ? deptAlloc[1] : 0;
+                        const deptQty = getDeptAllocQty(d.ma, focusDept);
                         return (
                           <div className="flex flex-col items-end">
                             {deptQty > 0 ? (
@@ -584,8 +594,7 @@ export default function LinenStockSubscreen({
           </div>
         ) : (
           filteredAndSortedItems.map(d => {
-            const deptAlloc = focusDept ? (detailAllocations[d.ma] || []).find(alloc => alloc[0] === focusDept) : null;
-            const deptQty = deptAlloc ? deptAlloc[1] : 0;
+            const deptQty = focusDept ? getDeptAllocQty(d.ma, focusDept) : 0;
 
             return (
               <div key={d.ma} className="bg-white border border-black/10 rounded-2xl p-4 shadow-xs space-y-3">

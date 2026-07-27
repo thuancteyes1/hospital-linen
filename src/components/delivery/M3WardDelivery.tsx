@@ -21,7 +21,9 @@ import {
   AlertCircle,
   TrendingDown,
   Printer,
-  CheckCircle2
+  CheckCircle2,
+  Package,
+  Truck
 } from 'lucide-react';
 import { checkPermission } from './utils/checkPermission';
 import ChecklistPagination from './utils/ChecklistPagination';
@@ -370,7 +372,7 @@ export default function M3WardDelivery({
     if (cappedItemsInfo.length > 0) {
       showToast(`ℹ️ Đã tự động điều chỉnh số lượng thực trả do tồn kho sạch không đủ:\n${cappedItemsInfo.join('\n')}\nPhần thiếu hụt đã được tự động tách thành Phiếu Nợ Khoa Phòng!`, 'info');
     } else {
-      showToast(`🚚 Đã gửi bàn giao đồ sạch cho Khoa ${slip.dept}! Đang chờ Khoa phòng kiểm đếm và XÁC NHẬN nhận đồ.`, 'info');
+      showToast(`Đã gửi bàn giao đồ sạch cho Khoa ${slip.dept}! Đang chờ Khoa phòng kiểm đếm và XÁC NHẬN nhận đồ.`, 'info');
     }
   };
 
@@ -464,8 +466,9 @@ export default function M3WardDelivery({
             {/* Kho sạch display card */}
             {!isOrderlyUser && (
               <div className="border border-emerald-300 bg-emerald-50/40 rounded-xl p-4 shadow-sm">
-                <span className="text-[10px] font-black uppercase text-emerald-700 tracking-wider block mb-2 font-bold flex items-center gap-1.5">
-                  📦 Kho đồ sạch tại Bệnh viện (Sẵn sàng trả khoa phòng)
+                <span className="text-[10px] font-black uppercase text-emerald-700 tracking-wider flex items-center gap-1.5 font-bold mb-2">
+                  <Package className="w-4 h-4 text-emerald-700 shrink-0" />
+                  <span>Kho đồ sạch tại Bệnh viện (Sẵn sàng trả khoa phòng)</span>
                 </span>
                 <div className="grid grid-cols-2 gap-2 text-xs max-h-[160px] overflow-y-auto">
                   {Object.keys(temporaryCleanStore).filter(ma => (temporaryCleanStore[ma] || 0) > 0).length > 0 ? (
@@ -716,7 +719,7 @@ export default function M3WardDelivery({
                                     <span className={`text-xs ${hasDelivery ? 'font-black text-stone-900' : 'font-medium text-stone-700'}`}>{item.ten}</span>
                                     {hasDelivery && (
                                       <span className="px-1.5 py-0.2 text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 rounded shadow-2xs">
-                                        🚚 CÓ GIAO: {activeQty} CÁI
+                                        <Truck className="w-2.5 h-2.5 shrink-0 inline-block mr-0.5 text-emerald-800" /> CÓ GIAO: {activeQty} CÁI
                                       </span>
                                     )}
                                   </div>

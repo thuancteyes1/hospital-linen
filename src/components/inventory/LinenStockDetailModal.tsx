@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
-import { MapPin, Eye, Info, X } from 'lucide-react';
+import { MapPin, X, Upload, Trash2 } from 'lucide-react';
 import { LinenItem } from '../../types';
 
 interface LinenStockDetailModalProps {
@@ -28,18 +28,26 @@ export default function LinenStockDetailModal({
   onEditItem,
   onSetSelectedDetailItem
 }: LinenStockDetailModalProps) {
-  React.useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        const updated = { ...selectedDetailItem, hinhAnh: dataUrl };
+        onEditItem(selectedDetailItem.ma, updated);
+        onSetSelectedDetailItem(updated);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
-  const [isEditingImage, setIsEditingImage] = useState(false);
-  const [newImageUrl, setNewImageUrl] = useState('');
-
-  const handleSaveImage = () => {
-    const updated = { ...selectedDetailItem, hinhAnh: newImageUrl.trim() || undefined };
+  const handleRemoveImage = () => {
+    const updated = { ...selectedDetailItem, hinhAnh: undefined };
     onEditItem(selectedDetailItem.ma, updated);
     onSetSelectedDetailItem(updated);
-    setIsEditingImage(false);
   };
 
   const modalContent = (
@@ -55,7 +63,7 @@ export default function LinenStockDetailModal({
               </div>
               <h3 className="font-serif font-black text-lg text-[#1A1A1A]">{selectedDetailItem.ten}</h3>
             </div>
-            <button onClick={onClose} className="w-7 h-7 rounded-full border border-[#1A1A1A] flex items-center justify-center text-stone-600 hover:text-black font-bold text-lg">&times;</button>
+            <button onClick={onClose} className="w-7 h-7 rounded-full border border-[#1A1A1A] flex items-center justify-center text-stone-600 hover:text-black font-bold text-lg cursor-pointer">&times;</button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -64,17 +72,30 @@ export default function LinenStockDetailModal({
                 <img src={getLinenImage(selectedDetailItem)} alt={selectedDetailItem.ten} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               </div>
               {!isWardUser && (
-                <div className="pt-1">
-                  {!isEditingImage ? (
-                    <button onClick={() => { setIsEditingImage(true); setNewImageUrl(selectedDetailItem.hinhAnh || ''); }} className="w-full py-2 bg-white hover:bg-stone-100 border border-[#1A1A1A] text-xs font-bold uppercase tracking-wider text-stone-800 rounded cursor-pointer font-bold">Chèn / Cập nhật ảnh mới</button>
-                  ) : (
-                    <div className="bg-white p-3 border border-[#1A1A1A] rounded-lg space-y-2">
-                      <input type="url" placeholder="Dán link ảnh (URL) mới" value={newImageUrl} onChange={e => setNewImageUrl(e.target.value)} className="w-full bg-[#EBE8E3] border border-[#1A1A1A] p-2 text-xs focus:outline-none rounded" />
-                      <div className="flex gap-2 justify-end">
-                        <button onClick={() => setIsEditingImage(false)} className="px-2 py-1 text-[10px] font-bold border border-stone-300 hover:bg-stone-50 rounded cursor-pointer">Hủy</button>
-                        <button onClick={handleSaveImage} className="px-3 py-1 bg-[#2563EB] text-white text-[10px] font-bold uppercase rounded cursor-pointer">Lưu</button>
-                      </div>
-                    </div>
+                <div className="pt-2 flex flex-col gap-2">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/jpg,image/webp"
+                    id={`file-upload-modal-${selectedDetailItem.ma}`}
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                  <label
+                    htmlFor={`file-upload-modal-${selectedDetailItem.ma}`}
+                    className="w-full py-2 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wider rounded cursor-pointer transition-all flex items-center justify-center gap-2 shadow-xs"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>Tải ảnh từ tệp (JPG, PNG)</span>
+                  </label>
+                  {selectedDetailItem.hinhAnh && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="w-full py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-bold uppercase rounded cursor-pointer transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Xóa ảnh hiện tại</span>
+                    </button>
                   )}
                 </div>
               )}

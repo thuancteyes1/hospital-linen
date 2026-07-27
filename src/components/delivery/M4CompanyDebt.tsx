@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { Building2, Truck } from 'lucide-react';
 import { 
   LinenItem, 
   WardDeliverySlip, 
@@ -425,7 +426,8 @@ export default function M4CompanyDebt({
               : 'text-stone-600 hover:text-stone-900 font-bold'
           }`}
         >
-          🏥 Nợ Khoa Phòng Lâm Sàng ({wardDebtsList.length})
+          <Building2 className="w-4 h-4 shrink-0" />
+          <span>Nợ Khoa Phòng Lâm Sàng ({wardDebtsList.length})</span>
         </button>
         <button
           onClick={() => setM4ActiveTab('company')}
@@ -435,7 +437,8 @@ export default function M4CompanyDebt({
               : 'text-stone-600 hover:text-stone-900 font-bold'
           }`}
         >
-          🚚 Nợ Xưởng Giặt Công Ty ({companyDebtsList.length})
+          <Truck className="w-4 h-4 shrink-0" />
+          <span>Nợ Xưởng Giặt Công Ty ({companyDebtsList.length})</span>
         </button>
       </div>
 

@@ -20,7 +20,6 @@ export default function AdjustDirtyStoreModal({
   const [adjustDirtyReason, setAdjustDirtyReason] = useState('');
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     // Populate adjustment quantities from store
     const initialQtys: Record<string, number> = {};
     items.forEach(item => {
@@ -154,7 +153,7 @@ export default function AdjustDirtyStoreModal({
             onClick={handleSaveAdjustDirtyStore}
             className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase rounded-lg shadow-md transition-all cursor-pointer font-bold"
           >
-            Lưu cân chỉnh 💾
+            Lưu cân chỉnh
           </button>
         </div>
       </div>

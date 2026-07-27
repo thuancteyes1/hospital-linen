@@ -1,5 +1,5 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Camera, Image as ImageIcon, Bed, RefreshCw, Trash2, CheckCircle2 } from 'lucide-react';
 import { LinenItem } from '../../../../types';
 
 interface M1WardCreateSlipModalProps {
@@ -19,7 +19,9 @@ interface M1WardCreateSlipModalProps {
   draftGuestRoom: string;
   setDraftGuestRoom: (val: string) => void;
   handleInsertDraftDemoImage: () => void;
-  draftAttachedImage: string;
+  draftAttachedImage?: string;
+  setDraftAttachedImage?: (val: string | undefined) => void;
+  handleUploadDraftImage?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   draftItems: any[];
   setDraftItems: React.Dispatch<React.SetStateAction<any[]>>;
   handleRemoveDraftItem: (ma: string) => void;
@@ -51,6 +53,8 @@ export default function M1WardCreateSlipModal({
   setDraftGuestRoom,
   handleInsertDraftDemoImage,
   draftAttachedImage,
+  setDraftAttachedImage,
+  handleUploadDraftImage,
   draftItems,
   setDraftItems,
   handleRemoveDraftItem,
@@ -63,17 +67,22 @@ export default function M1WardCreateSlipModal({
   handleAddCustomDraftFromTable,
   handleSubmitSlip
 }: M1WardCreateSlipModalProps) {
-  React.useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  // Modal opened
 
   return (
     <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm flex items-start justify-center p-4 pt-4 sm:pt-8 md:pt-12 z-50 overflow-y-auto animate-fade-in">
       <div className="bg-white border border-[#1A1A1A] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="p-4 bg-stone-100 border-b border-stone-300 flex justify-between items-center animate-fade-in">
           <div>
-            <h3 className="text-sm font-black text-stone-900 uppercase tracking-wide font-bold">
-              {draftIsRewash ? '🔄 Tạo Phiếu Gửi Giặt Lại (Rewash)' : 'Tạo Phiếu Khai Báo Giao Nhận Đồ Vải Dơ'}
+            <h3 className="text-sm font-black text-stone-900 uppercase tracking-wide font-bold flex items-center gap-1.5">
+              {draftIsRewash ? (
+                <>
+                  <RefreshCw className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span>Tạo Phiếu Gửi Giặt Lại (Rewash)</span>
+                </>
+              ) : (
+                'Tạo Phiếu Khai Báo Giao Nhận Đồ Vải Dơ'
+              )}
             </h3>
             <span className="text-[10px] text-stone-500 block mt-0.5">Mẫu khai báo gửi dơ nội bộ để đổ vào Kho dơ</span>
           </div>
@@ -130,8 +139,9 @@ export default function M1WardCreateSlipModal({
                 className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-indigo-300 cursor-pointer"
               />
               <div>
-                <label htmlFor="draftIsRewashCheck" className="text-xs font-black text-indigo-950 cursor-pointer block select-none font-bold">
-                  🔄 TÍCH CHỌN PHIẾU GIẶT LẠI (REWASH)
+                <label htmlFor="draftIsRewashCheck" className="text-xs font-black text-indigo-950 cursor-pointer flex items-center gap-1.5 select-none font-bold">
+                  <RefreshCw className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span>TÍCH CHỌN PHIẾU GIẶT LẠI (REWASH)</span>
                 </label>
                 <span className="text-[10px] text-indigo-800 block leading-normal mt-0.5">
                   Sử dụng khi phát hiện đồ sạch trong kho bị bẩn hoặc ố vàng cần gửi giặt lại (sẽ trừ tồn kho sạch và cộng dơ).
@@ -142,7 +152,10 @@ export default function M1WardCreateSlipModal({
 
           {selectedDept.startsWith('Khách') && (
             <div className="p-4 border-2 border-amber-300 bg-amber-50/70 rounded-xl space-y-3.5 shadow-xs">
-              <span className="text-xs font-black text-amber-900 uppercase block tracking-wider font-bold">🛏️ THÔNG TIN KHÁCH VIP RIÊNG (NV BUỒNG PHÒNG ĐẦY ĐỦ HÌNH ẢNH)</span>
+              <span className="text-xs font-black text-amber-900 uppercase flex items-center gap-1.5 tracking-wider font-bold">
+                <Bed className="w-4 h-4 text-amber-700 shrink-0" />
+                <span>THÔNG TIN KHÁCH VIP RIÊNG (NV BUỒNG PHÒNG ĐẦY ĐỦ HÌNH ẢNH)</span>
+              </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[9px] font-bold text-amber-800 uppercase mb-1">Họ tên khách</label>
@@ -166,18 +179,64 @@ export default function M1WardCreateSlipModal({
                 </div>
               </div>
               
-              <div className="pt-2 border-t border-amber-200">
-                <button
-                  type="button"
-                  onClick={handleInsertDraftDemoImage}
-                  className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-black uppercase rounded-lg shadow-md transition-all flex items-center gap-1.5 cursor-pointer font-bold"
-                >
-                  📸 CHÈN ẢNH CHỤP ĐỒ KHÁCH (DEMO)
-                </button>
+              <div className="pt-2.5 border-t border-amber-200/80 space-y-2">
+                <label className="block text-[10px] font-bold text-amber-900 uppercase flex items-center gap-1.5">
+                  <Camera className="w-3.5 h-3.5 text-amber-800 shrink-0" />
+                  <span>HÌNH ẢNH THỰC TẾ ĐỒ KHÁCH (CHỤP TRỰC TIẾP HOẶC TẢI LÊN)</span>
+                </label>
+                
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Chụp ảnh trực tiếp từ camera điện thoại */}
+                  <label className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                    <Camera className="w-3.5 h-3.5 shrink-0" />
+                    <span>Chụp ảnh trực tiếp</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleUploadDraftImage}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {/* Chọn ảnh có sẵn từ thư viện thiết bị */}
+                  <label className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                    <ImageIcon className="w-3.5 h-3.5 shrink-0" />
+                    <span>Chọn từ thư viện</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleUploadDraftImage}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {/* Hiển thị hình ảnh xem trước */}
                 {draftAttachedImage && (
-                  <div className="mt-3 bg-white p-2 rounded-lg border border-amber-300 inline-block shadow-sm">
-                    <img src={draftAttachedImage} alt="Mẫu đồ khách" className="max-h-40 object-contain rounded" referrerPolicy="no-referrer" />
-                    <p className="text-[10px] text-emerald-700 font-mono text-center mt-1">✓ Đã đính kèm hình ảnh thực tế đồ khách</p>
+                  <div className="mt-2 bg-white p-2.5 rounded-xl border border-amber-300 shadow-sm inline-block space-y-2">
+                    <div className="relative group">
+                      <img
+                        src={draftAttachedImage}
+                        alt="Mẫu đồ khách"
+                        className="max-h-48 rounded-lg object-contain border border-stone-200"
+                        referrerPolicy="no-referrer"
+                      />
+                      {setDraftAttachedImage && (
+                        <button
+                          type="button"
+                          onClick={() => setDraftAttachedImage(undefined)}
+                          className="mt-1.5 w-full py-1 bg-red-100 hover:bg-red-200 text-red-700 text-[11px] font-bold rounded-md transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3 shrink-0" />
+                          <span>Xóa ảnh này</span>
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-emerald-700 font-bold text-center flex items-center justify-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 shrink-0" />
+                      <span>Đã đính kèm hình ảnh thực tế đồ khách</span>
+                    </p>
                   </div>
                 )}
               </div>

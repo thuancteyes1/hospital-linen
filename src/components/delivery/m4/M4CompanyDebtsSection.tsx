@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Search, X, Clock, FileCheck } from 'lucide-react';
+import { Search, X, Clock, FileCheck, FileText, Truck } from 'lucide-react';
 import { LaundryDispatch } from '../../../types';
 
 interface M4CompanyDebtsSectionProps {
@@ -103,7 +103,8 @@ export default function M4CompanyDebtsSection({
               : 'text-stone-600 hover:text-stone-900 font-bold'
           }`}
         >
-          📋 Tất Cả Hóa Đơn Nợ ({laundryDispatches.filter(d => d.id.startsWith('BILL-NỢ-CTY-') && d.status !== 'completed').length})
+          <FileText className="w-3.5 h-3.5 shrink-0" />
+          <span>Tất Cả Hóa Đơn Nợ ({laundryDispatches.filter(d => d.id.startsWith('BILL-NỢ-CTY-') && d.status !== 'completed').length})</span>
         </button>
         <button
           onClick={() => setM2DebtTab('over48h')}
@@ -313,7 +314,10 @@ export default function M4CompanyDebtsSection({
                         {isFormOpen ? (
                           <div ref={detailSectionRef} className="space-y-3 bg-white p-3 rounded-xl border border-amber-300 scroll-mt-6">
                             <div className="flex justify-between items-center pb-1 border-b border-stone-100">
-                              <span className="text-[11px] font-black uppercase text-amber-900 font-bold">🚚 XƯỞNG GIẶT KHAI BÁO TRẢ SẠCH NỢ</span>
+                              <span className="text-[11px] font-black uppercase text-amber-900 font-bold flex items-center gap-1.5">
+                                <Truck className="w-3.5 h-3.5 text-amber-800 shrink-0" />
+                                <span>XƯỞNG GIẶT KHAI BÁO TRẢ SẠCH NỢ</span>
+                              </span>
                               <button onClick={() => setM4SelectedCompanyDebtId(null)} className="text-stone-400 hover:text-stone-600 cursor-pointer font-bold"><X size={14} /></button>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

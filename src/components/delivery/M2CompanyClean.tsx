@@ -21,7 +21,10 @@ import {
   Clock, 
   FileCheck,
   AlertCircle,
-  Printer
+  Printer,
+  Factory,
+  Bed,
+  Camera
 } from 'lucide-react';
 import { checkPermission } from './utils/checkPermission';
 import ChecklistPagination from './utils/ChecklistPagination';
@@ -273,7 +276,7 @@ export default function M2CompanyClean({
     });
     setM2ItemHospitalVerifyQtys(initHospVerify);
 
-    showToast(`🚚 Cty đã lập bill trả sạch (Báo trả: ${updatedItems.reduce((s, i) => s + i.cleanReturnedQty, 0)} cái${totalDebt > 0 ? `, Nợ: ${totalDebt} cái` : ''})! Vui lòng chờ Nhân viên đồ vải Bệnh Viện kiểm đếm & xác nhận đủ bill.`, 'info');
+    showToast(`Cty đã lập bill trả sạch (Báo trả: ${updatedItems.reduce((s, i) => s + i.cleanReturnedQty, 0)} cái${totalDebt > 0 ? `, Nợ: ${totalDebt} cái` : ''})! Vui lòng chờ Nhân viên đồ vải Bệnh Viện kiểm đếm & xác nhận đủ bill.`, 'info');
   };
 
   // Section 2 - Step 2: Hospital linen staff verifies clean return and completes bill (auto debt split & stock update)
@@ -399,8 +402,9 @@ export default function M2CompanyClean({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Kho dơ tại Cty (Đang xử lý tại xưởng) */}
               <div className="border border-blue-300 bg-blue-50/45 rounded-xl p-4 shadow-sm">
-                <span className="text-xs font-black uppercase text-blue-800 tracking-wider block mb-2 flex items-center gap-1.5 font-bold">
-                  🏭 Kho đồ dơ tại Cty (Xưởng giặt)
+                <span className="text-xs font-black uppercase text-blue-800 tracking-wider flex items-center gap-1.5 font-bold mb-2">
+                  <Factory className="w-4 h-4 text-blue-700 shrink-0" />
+                  <span>Kho đồ dơ tại Cty (Xưởng giặt)</span>
                 </span>
                 <div className="space-y-1.5 max-h-[160px] overflow-y-auto">
                   {Object.keys(temporaryCompanyDirtyStore).filter(ma => (temporaryCompanyDirtyStore[ma] || 0) > 0).length > 0 ? (
@@ -590,7 +594,8 @@ export default function M2CompanyClean({
                   <div className="p-4 bg-amber-50/90 border-2 border-amber-400 rounded-xl space-y-3 shadow-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-black text-amber-900 uppercase flex items-center gap-1.5 font-bold">
-                        🛏️ BILL RIÊNG ĐỒ VẢI KHÁCH VIP (ĐIỀU HOÀN BẢO QUẢN RIÊNG)
+                        <Bed className="w-4 h-4 text-amber-800 shrink-0" />
+                        <span>BILL RIÊNG ĐỒ VẢI KHÁCH VIP (ĐIỀU HOÀN BẢO QUẢN RIÊNG)</span>
                       </span>
                       <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full border border-amber-300">
                         {activeDispatch.dept || 'Khách VIP'}
@@ -604,8 +609,9 @@ export default function M2CompanyClean({
                     )}
                     {activeDispatch.attachedImage && (
                       <div className="bg-white p-3 rounded-lg border border-amber-300 space-y-2">
-                        <div className="flex items-center justify-between text-xs font-bold text-stone-800">
-                          <span>📸 Ảnh chụp đồ dơ ban đầu (Đính kèm bởi NV Buồng phòng):</span>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-stone-800">
+                          <Camera className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                          <span>Ảnh chụp đồ dơ ban đầu (Đính kèm bởi NV Buồng phòng):</span>
                         </div>
                         <div className="flex justify-center bg-stone-100 p-2 rounded border border-stone-200">
                           <img src={activeDispatch.attachedImage} alt="Đồ vải khách VIP" className="max-h-64 object-contain rounded shadow-xs" />
@@ -690,7 +696,7 @@ export default function M2CompanyClean({
                                     <span className={`text-xs ${hasDelivery ? 'font-black text-stone-900' : 'font-medium text-stone-700'}`}>{item.ten}</span>
                                     {hasDelivery && (
                                       <span className="px-1.5 py-0.2 text-[9px] font-black bg-indigo-100 text-indigo-900 border border-indigo-300 rounded shadow-2xs">
-                                        🚚 CÓ GIAO: {activeDeliveryQty} CÁI
+                                        <Truck className="w-2.5 h-2.5 shrink-0 inline-block mr-0.5" /> CÓ GIAO: {activeDeliveryQty} CÁI
                                       </span>
                                     )}
                                   </div>
@@ -785,7 +791,7 @@ export default function M2CompanyClean({
                   <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <p className="text-[11px] text-indigo-900 font-bold flex items-center gap-1.5">
-                        🚚 BƯỚC 4.1: CÔNG TY LẬP BILL TRẢ SẠCH KHO BV
+                        <Truck className="w-3.5 h-3.5 text-indigo-700 shrink-0 inline-block mr-1" /> BƯỚC 4.1: CÔNG TY LẬP BILL TRẢ SẠCH KHO BV
                       </p>
                       <span className="text-[9px] bg-indigo-200 text-indigo-900 font-bold px-2 py-0.5 rounded">Xưởng giặt khai báo</span>
                     </div>

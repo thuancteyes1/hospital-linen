@@ -10,10 +10,6 @@ interface LinenStockExcelImportModalProps {
 }
 
 export default function LinenStockExcelImportModal({ onClose, onConfirm, departments }: LinenStockExcelImportModalProps) {
-  React.useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-
   const [excelFileName, setExcelFileName] = useState('');
   const [excelError, setExcelError] = useState('');
   const [excelParsedData, setExcelParsedData] = useState<{ items: LinenItem[]; allocations: Record<string, [string, number][]> } | null>(null);

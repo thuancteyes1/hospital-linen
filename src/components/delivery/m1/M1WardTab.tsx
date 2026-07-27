@@ -14,7 +14,14 @@ import {
   Search, 
   X, 
   Check,
-  Printer
+  Printer,
+  Camera,
+  Image as ImageIcon,
+  Bed,
+  RefreshCw,
+  Trash2,
+  CheckCircle2,
+  Edit3
 } from 'lucide-react';
 import { checkPermission } from '../utils/checkPermission';
 import M1WardSlipsList from './ward/M1WardSlipsList';
@@ -454,6 +461,50 @@ export default function M1WardTab({
     showToast(`✓ Đã gửi phiếu giao đồ dơ ${newSlipId} thành công!`, 'success');
   };
 
+  const handleUploadDraftImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('⚠️ Vui lòng chọn tệp hình ảnh (JPG, PNG, WEBP...)', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1000;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+        }
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        setDraftAttachedImage(dataUrl);
+        showToast('Đã đính kèm hình ảnh đồ khách thành công!', 'success');
+      };
+      img.onerror = () => {
+        showToast('Không thể đọc tệp hình ảnh này', 'error');
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
   const handleInsertDraftDemoImage = () => {
     const canvas = document.createElement('canvas');
     canvas.width = 400;
@@ -488,7 +539,7 @@ export default function M1WardTab({
       ctx.fillText(`Thời gian: ${new Date().toLocaleTimeString('vi-VN')}`, 40, 220);
     }
     setDraftAttachedImage(canvas.toDataURL('image/jpeg', 0.8));
-    showToast('🖼️ Đã chèn ảnh chụp mẫu thành công!', 'success');
+    showToast('Đã chèn ảnh chụp mẫu thành công!', 'success');
   };
 
   // Editing a slip methods
@@ -1148,7 +1199,7 @@ export default function M1WardTab({
                   onClick={handleSaveEditSlip}
                   className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase rounded-lg shadow-md transition-all cursor-pointer"
                 >
-                  Lưu thay đổi 💾
+                  Lưu thay đổi
                 </button>
               </div>
             </div>
@@ -1171,14 +1222,14 @@ export default function M1WardTab({
                           className="px-2 py-0.5 text-[9px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 rounded transition-all flex items-center gap-0.5 cursor-pointer"
                           title="Sửa phiếu"
                         >
-                          ✏️ Sửa phiếu
+                          <Edit3 className="w-2.5 h-2.5 shrink-0" /> Sửa phiếu
                         </button>
                         <button
                           onClick={() => handleDeletePendingSlip(activeSlip.id)}
                           className="px-2 py-0.5 text-[9px] bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 rounded transition-all flex items-center gap-0.5 cursor-pointer"
                           title="Xóa phiếu"
                         >
-                          🗑️ Xóa phiếu
+                          <Trash2 className="w-2.5 h-2.5 shrink-0" /> Xóa phiếu
                         </button>
                       </div>
                     )}
@@ -1202,7 +1253,7 @@ export default function M1WardTab({
                 <div className="p-4 bg-amber-50/80 border-2 border-amber-400 rounded-xl space-y-2 shadow-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-amber-900 uppercase flex items-center gap-1.5">
-                      🛏️ PHIẾU ĐỒ VẢI KHÁCH VIP (NV BUỒNG PHÒNG)
+                      <Bed className="w-4 h-4 text-amber-800 shrink-0" /> PHIẾU ĐỒ VẢI KHÁCH VIP (NV BUỒNG PHÒNG)
                     </span>
                     {(activeSlip.guestName || activeSlip.guestRoom) && (
                       <span className="text-xs font-bold text-amber-900 bg-amber-200/80 px-2.5 py-0.5 rounded-lg border border-amber-300">
@@ -1425,8 +1476,9 @@ export default function M1WardTab({
                     className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-indigo-300 cursor-pointer"
                   />
                   <div>
-                    <label htmlFor="draftIsRewashCheck" className="text-xs font-black text-indigo-950 cursor-pointer block select-none font-bold">
-                      🔄 TÍCH CHỌN PHIẾU GIẶT LẠI (REWASH)
+                    <label htmlFor="draftIsRewashCheck" className="text-xs font-black text-indigo-950 cursor-pointer flex items-center gap-1.5 select-none font-bold">
+                      <RefreshCw className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                      <span>TÍCH CHỌN PHIẾU GIẶT LẠI (REWASH)</span>
                     </label>
                     <span className="text-[10px] text-indigo-800 block leading-normal mt-0.5">
                       Sử dụng khi phát hiện đồ sạch trong kho bị bẩn hoặc ố vàng cần gửi giặt lại (sẽ trừ tồn kho sạch và cộng dơ).
@@ -1437,7 +1489,10 @@ export default function M1WardTab({
 
               {selectedDept.startsWith('Khách') && (
                 <div className="p-4 border-2 border-amber-300 bg-amber-50/70 rounded-xl space-y-3.5 shadow-xs">
-                  <span className="text-xs font-black text-amber-900 uppercase block tracking-wider font-bold">🛏️ THÔNG TIN KHÁCH VIP RIÊNG (NV BUỒNG PHÒNG ĐẦY ĐỦ HÌNH ẢNH)</span>
+                  <span className="text-xs font-black text-amber-900 uppercase flex items-center gap-1.5 tracking-wider font-bold">
+                    <Bed className="w-4 h-4 text-amber-700 shrink-0" />
+                    <span>THÔNG TIN KHÁCH VIP RIÊNG (NV BUỒNG PHÒNG ĐẦY ĐỦ HÌNH ẢNH)</span>
+                  </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[9px] font-bold text-amber-800 uppercase mb-1">Họ tên khách</label>
@@ -1461,18 +1516,62 @@ export default function M1WardTab({
                     </div>
                   </div>
                   
-                  <div className="pt-2 border-t border-amber-200">
-                    <button
-                      type="button"
-                      onClick={handleInsertDraftDemoImage}
-                      className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-black uppercase rounded-lg shadow-md transition-all flex items-center gap-1.5 cursor-pointer font-bold"
-                    >
-                      📸 CHÈN ẢNH CHỤP ĐỒ KHÁCH (DEMO)
-                    </button>
+                  <div className="pt-2.5 border-t border-amber-200/80 space-y-2">
+                    <label className="block text-[10px] font-bold text-amber-900 uppercase flex items-center gap-1.5">
+                      <Camera className="w-3.5 h-3.5 text-amber-800 shrink-0" />
+                      <span>HÌNH ẢNH THỰC TẾ ĐỒ KHÁCH (CHỤP TRỰC TIẾP HOẶC TẢI LÊN)</span>
+                    </label>
+                    
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Chụp ảnh trực tiếp từ camera điện thoại */}
+                      <label className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                        <Camera className="w-3.5 h-3.5 shrink-0" />
+                        <span>Chụp ảnh trực tiếp</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={handleUploadDraftImage}
+                          className="hidden"
+                        />
+                      </label>
+
+                      {/* Chọn ảnh có sẵn từ thư viện thiết bị */}
+                      <label className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                        <ImageIcon className="w-3.5 h-3.5 shrink-0" />
+                        <span>Chọn từ thư viện</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleUploadDraftImage}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Hiển thị hình ảnh xem trước */}
                     {draftAttachedImage && (
-                      <div className="mt-3 bg-white p-2 rounded-lg border border-amber-300 inline-block shadow-sm">
-                        <img src={draftAttachedImage} alt="Mẫu đồ khách" className="max-h-40 object-contain rounded" referrerPolicy="no-referrer" />
-                        <p className="text-[10px] text-emerald-700 font-mono text-center mt-1">✓ Đã đính kèm hình ảnh thực tế đồ khách</p>
+                      <div className="mt-2 bg-white p-2.5 rounded-xl border border-amber-300 shadow-sm inline-block space-y-2">
+                        <div className="relative group">
+                          <img
+                            src={draftAttachedImage}
+                            alt="Mẫu đồ khách"
+                            className="max-h-48 rounded-lg object-contain border border-stone-200"
+                            referrerPolicy="no-referrer"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setDraftAttachedImage(undefined)}
+                            className="mt-1.5 w-full py-1 bg-red-100 hover:bg-red-200 text-red-700 text-[11px] font-bold rounded-md transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3 shrink-0" />
+                            <span>Xóa ảnh này</span>
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-emerald-700 font-bold text-center flex items-center justify-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 shrink-0" />
+                          <span>Đã đính kèm hình ảnh thực tế đồ khách</span>
+                        </p>
                       </div>
                     )}
                   </div>

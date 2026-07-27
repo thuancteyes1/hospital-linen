@@ -180,9 +180,17 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
             changedRole = true;
             localStorage.setItem('dovai_locked_v1', 'true');
           }
-          if (newPerms.thuhoi === undefined || newPerms.dc === undefined) {
-            if (newPerms.thuhoi === undefined) newPerms.thuhoi = true;
-            if (newPerms.dc === undefined) newPerms.dc = true;
+          if (newPerms.nhap !== false || newPerms.thuhoi !== true || newPerms.xuat !== false || newPerms.huy !== false || newPerms.dc !== false) {
+            newPerms.nhap = false;
+            newPerms.thuhoi = true;
+            newPerms.xuat = false;
+            newPerms.huy = false;
+            newPerms.dc = false;
+            changedRole = true;
+          }
+        } else if (nameLower.includes('nhân viên đồ vải') && !nameLower.includes('trưởng kho')) {
+          if (newPerms.huy !== false) {
+            newPerms.huy = false;
             changedRole = true;
           }
         }

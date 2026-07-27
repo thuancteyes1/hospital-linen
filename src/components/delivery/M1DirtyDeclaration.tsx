@@ -16,7 +16,8 @@ import {
   FileText, 
   Truck, 
   Settings, 
-  AlertCircle 
+  AlertCircle,
+  Package 
 } from 'lucide-react';
 import { checkPermission } from './utils/checkPermission';
 import M1WardTab from './m1/M1WardTab';
@@ -136,10 +137,11 @@ export default function M1DirtyDeclaration({
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black uppercase text-amber-800 tracking-wider flex items-center gap-1.5 font-bold">
+                    <Package className="w-4 h-4 text-amber-800 shrink-0" />
                     {m1SubTab === 'dirty-ward' ? (
-                      <span>📦 Kho đồ dơ Bệnh viện (Nhận từ khoa lâm sàng)</span>
+                      <span>Kho đồ dơ Bệnh viện (Nhận từ khoa lâm sàng)</span>
                     ) : (
-                      <span>📦 Kho đồ dơ Công ty (Đã bàn giao xưởng giặt)</span>
+                      <span>Kho đồ dơ Công ty (Đã bàn giao xưởng giặt)</span>
                     )}
                   </span>
                   <span className="font-mono text-xs font-black text-amber-800 bg-amber-100 px-2.5 py-1 rounded">

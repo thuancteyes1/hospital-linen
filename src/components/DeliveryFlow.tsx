@@ -230,19 +230,19 @@ export default function DeliveryFlow({
     let successMsg = '';
     switch (type) {
       case 'all':
-        successMsg = '🧹 Đã xóa toàn bộ dữ liệu vận hành & reset hệ thống thành công!';
+        successMsg = 'Đã xóa toàn bộ dữ liệu vận hành & reset hệ thống thành công!';
         break;
       case 'wardSlips':
-        successMsg = '📋 Đã xóa danh sách phiếu giao dơ thành công!';
+        successMsg = 'Đã xóa danh sách phiếu giao dơ thành công!';
         break;
       case 'laundryDispatches':
-        successMsg = '🚚 Đã xóa danh sách bàn giao và trả sạch thành công!';
+        successMsg = 'Đã xóa danh sách bàn giao và trả sạch thành công!';
         break;
       case 'dirtyStore':
-        successMsg = '🧺 Đã reset kho dơ tạm về 0 thành công!';
+        successMsg = 'Đã reset kho dơ tạm về 0 thành công!';
         break;
       case 'cleanStore':
-        successMsg = '✨ Đã reset kho sạch tạm về 0 thành công!';
+        successMsg = 'Đã reset kho sạch tạm về 0 thành công!';
         break;
       case 'onlyInventory':
         successMsg = '🔄 Đã reset tồn kho của cả 3 phân hệ về 0 thành công!';

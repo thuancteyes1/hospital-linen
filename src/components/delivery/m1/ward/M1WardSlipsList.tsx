@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X, PlusCircle, Sparkles } from 'lucide-react';
+import { Search, X, PlusCircle, Sparkles, RefreshCw } from 'lucide-react';
 import { WardDeliverySlip, Account } from '../../../../types';
 
 interface M1WardSlipsListProps {
@@ -131,8 +131,9 @@ export default function M1WardSlipsList({
                   <div className="flex items-center gap-1.5">
                     <span className="font-mono text-xs font-black text-stone-900">{slip.id}</span>
                     {slip.isRewash && (
-                      <span className="bg-amber-100 text-amber-800 border border-amber-200 text-[8px] font-bold px-1 rounded-sm uppercase tracking-wide">
-                        🔄 Giặt lại
+                      <span className="bg-amber-100 text-amber-800 border border-amber-200 text-[8px] font-bold px-1 py-0.5 rounded-sm uppercase tracking-wide flex items-center gap-0.5">
+                        <RefreshCw className="w-2.5 h-2.5 shrink-0" />
+                        <span>Giặt lại</span>
                       </span>
                     )}
                   </div>

@@ -172,8 +172,36 @@ export function useAuth(
   }, [currentAccount, simulatedRole]);
 
   const canSeeReport = useMemo(() => {
-    return !!currentAccount;
-  }, [currentAccount]);
+    if (!currentAccount) return false;
+
+    if (simulatedRole === 'admin' || simulatedRole === 'linen' || simulatedRole === 'clean') {
+      return true;
+    }
+    if (simulatedRole === 'ward' || simulatedRole === 'orderly' || simulatedRole === 'housekeeping' || simulatedRole === 'laundry') {
+      return false;
+    }
+
+    if (isCurrentlyAdmin || currentAccount.isAdmin) return true;
+    if (isWardUser || isHousekeepingUser || isLaundryUser) return false;
+
+    const u = users[currentAccount.userIdx] || users.find(x => x.email === currentAccount.email);
+    const roleIdx = u ? u.role : undefined;
+    if (roleIdx === 0 || roleIdx === 1) return true;
+
+    const roleLower = (currentRoleName || '').toLowerCase();
+    if (roleLower.includes('admin') ||
+        roleLower.includes('quản trị') ||
+        roleLower.includes('trưởng kho') ||
+        roleLower.includes('thủ kho') ||
+        roleLower.includes('nhân viên đồ vải') ||
+        roleLower.includes('quản lý đồ vải') ||
+        roleLower.includes('kho sạch') ||
+        roleLower.includes('đồ vải')) {
+      return true;
+    }
+
+    return false;
+  }, [currentAccount, simulatedRole, isCurrentlyAdmin, isWardUser, isHousekeepingUser, isLaundryUser, users, currentRoleName]);
 
   return {
     currentAccount,

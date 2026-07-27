@@ -9,7 +9,11 @@ import {
   Search, 
   X,
   Trash2,
-  Printer
+  Printer,
+  Bed,
+  Camera,
+  ClipboardCheck,
+  Truck
 } from 'lucide-react';
 import { generateDailySlipId } from '../../../data';
 import { checkPermission } from '../utils/checkPermission';
@@ -782,7 +786,8 @@ export default function M1CompanyTab({
               <div className="p-4 bg-amber-50/90 border-2 border-amber-400 rounded-xl space-y-3 shadow-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-amber-900 uppercase flex items-center gap-1.5 font-bold">
-                    🛏️ BILL RIÊNG ĐỒ VẢI KHÁCH VIP (ĐIỀU HOÀN BẢO QUẢN RIÊNG)
+                    <Bed className="w-4 h-4 text-amber-800 shrink-0" />
+                    <span>BILL RIÊNG ĐỒ VẢI KHÁCH VIP (ĐIỀU HOÀN BẢO QUẢN RIÊNG)</span>
                   </span>
                   <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full border border-amber-300">
                     {activeDispatch.dept || 'Khách VIP'}
@@ -796,8 +801,9 @@ export default function M1CompanyTab({
                 )}
                 {activeDispatch.attachedImage && (
                   <div className="bg-white p-3 rounded-lg border border-amber-300 space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold text-stone-800">
-                      <span>📸 Ảnh chụp đồ dơ ban đầu (Đính kèm bởi NV Buồng phòng):</span>
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-stone-800">
+                      <Camera className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                      <span>Ảnh chụp đồ dơ ban đầu (Đính kèm bởi NV Buồng phòng):</span>
                     </div>
                     <div className="flex justify-center bg-stone-100 p-2 rounded border border-stone-200">
                       <img src={activeDispatch.attachedImage} alt="Đồ vải khách VIP" className="max-h-64 object-contain rounded shadow-xs" referrerPolicy="no-referrer" />
@@ -807,12 +813,13 @@ export default function M1CompanyTab({
               </div>
             )}
 
-            {/* 📋 BẢNG CHECKLIST ĐỐI CHIẾU KHO DƠ BỆNH VIỆN (CHỜ GIAO CTY) */}
+            {/* BẢNG CHECKLIST ĐỐI CHIẾU KHO DƠ BỆNH VIỆN (CHỜ GIAO CTY) */}
             <div className="bg-gradient-to-br from-amber-50 to-amber-100/40 border border-amber-300 rounded-xl p-4 space-y-3">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                 <div>
                   <span className="text-xs font-black uppercase text-amber-900 tracking-wider flex items-center gap-1.5 font-bold">
-                    📋 BẢNG CHECKLIST ĐỐI CHIẾU KHO DƠ BV (LẦN 2)
+                    <ClipboardCheck className="w-4 h-4 text-amber-900 shrink-0" />
+                    <span>BẢNG CHECKLIST ĐỐI CHIẾU KHO DƠ BV (LẦN 2)</span>
                   </span>
                   <span className="text-[10px] text-stone-600 block">
                     Checklist kiểm đếm thực tế đồ dơ đang gom tại kho trước khi bốc xếp lên xe.
@@ -924,8 +931,9 @@ export default function M1CompanyTab({
                                   {item.ten}
                                 </span>
                                 {hasDelivery && (
-                                  <span className="px-1.5 py-0.2 text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 rounded shadow-2xs">
-                                    🚚 CÓ GIAO: {billQty || storeQty} CÁI
+                                  <span className="px-1.5 py-0.2 text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 rounded shadow-2xs flex items-center gap-0.5">
+                                    <Truck className="w-2.5 h-2.5 shrink-0" />
+                                    <span>CÓ GIAO: {billQty || storeQty} CÁI</span>
                                   </span>
                                 )}
                               </div>

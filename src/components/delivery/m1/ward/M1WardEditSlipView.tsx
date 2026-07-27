@@ -237,7 +237,7 @@ export default function M1WardEditSlipView({
           onClick={handleSaveEditSlip}
           className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase rounded-lg shadow-md transition-all cursor-pointer"
         >
-          Lưu thay đổi 💾
+          Lưu thay đổi
         </button>
       </div>
     </div>

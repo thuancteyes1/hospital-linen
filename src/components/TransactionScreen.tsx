@@ -98,11 +98,25 @@ export default function TransactionScreen({
   const currentUserRecord = useMemo(() => {
     let targetRoleIdx = 2; // Default ward role index
     if (currentAccount) {
-      const isHl = currentAccount.username === 'sim.hl' || currentAccount.username === 'lan.hl' || currentAccount.username === 'tai.hl' || (currentAccount.name || '').toLowerCase().includes('hộ lý');
+      const username = currentAccount.username || '';
+      const nameLower = (currentAccount.name || '').toLowerCase();
+      const isHl = username === 'sim.hl' || username === 'lan.hl' || username === 'tai.hl' || nameLower.includes('hộ lý');
+      const isDd = username === 'sim.dd' || username === 'mai.dd' || username === 'hoa.dd' || username === 'ngoc.dd' || nameLower.includes('điều dưỡng');
+      const isNv = username === 'sim.clean' || username === 'minh.nv' || (nameLower.includes('nhân viên đồ vải') && !nameLower.includes('trưởng kho'));
+      const isTk = username === 'sim.tk' || username === 'an.nv' || nameLower.includes('trưởng kho');
+
       if (isHl) {
         const hlIdx = roles.findIndex(r => (r.name || '').toLowerCase().includes('hộ lý'));
-        if (hlIdx !== -1) targetRoleIdx = hlIdx;
-        else targetRoleIdx = 5;
+        targetRoleIdx = hlIdx !== -1 ? hlIdx : 5;
+      } else if (isDd) {
+        const ddIdx = roles.findIndex(r => (r.name || '').toLowerCase().includes('điều dưỡng'));
+        targetRoleIdx = ddIdx !== -1 ? ddIdx : 2;
+      } else if (isNv) {
+        const nvIdx = roles.findIndex(r => (r.name || '').toLowerCase().includes('nhân viên đồ vải') && !(r.name || '').toLowerCase().includes('trưởng kho'));
+        targetRoleIdx = nvIdx !== -1 ? nvIdx : 1;
+      } else if (isTk) {
+        const tkIdx = roles.findIndex(r => (r.name || '').toLowerCase().includes('trưởng kho'));
+        targetRoleIdx = tkIdx !== -1 ? tkIdx : 0;
       } else {
         const u = users[currentAccount.userIdx] || users.find(x => x.email === currentAccount.email);
         if (u && u.role !== undefined) targetRoleIdx = u.role;
@@ -114,7 +128,7 @@ export default function TransactionScreen({
     if (!currentAccount) return null;
     const u = users[currentAccount.userIdx] || users.find(x => x.email === currentAccount.email);
     if (u) {
-      return { dept: u.dept, role: u.role };
+      return { dept: u.dept, role: targetRoleIdx };
     }
     const username = currentAccount.username;
     const hlIdx = roles.findIndex(r => (r.name || '').toLowerCase().includes('hộ lý'));
@@ -140,7 +154,11 @@ export default function TransactionScreen({
 
   // Compute allowed transactions based on user's authorized role
   const userPermissions = useMemo(() => {
-    if (currentAccount?.isAdmin) {
+    const username = currentAccount?.username || '';
+    const nameLower = (currentAccount?.name || '').toLowerCase();
+    const isSimulatedRole = username.startsWith('sim.') || nameLower.includes('điều dưỡng') || nameLower.includes('hộ lý') || nameLower.includes('nhân viên đồ vải');
+
+    if (currentAccount?.isAdmin && !isSimulatedRole) {
       return {
         nhap: true,
         thuhoi: true,
@@ -150,22 +168,64 @@ export default function TransactionScreen({
         dovai: true
       };
     }
-    const isHl = currentAccount?.username === 'sim.hl' || 
-                 currentAccount?.username === 'lan.hl' || 
-                 currentAccount?.username === 'tai.hl' || 
-                 (currentAccount?.name || '').toLowerCase().includes('hộ lý') ||
+
+    // 1. Check Hộ lý -> no transaction creation perms
+    const isHl = username === 'sim.hl' || 
+                 username === 'lan.hl' || 
+                 username === 'tai.hl' || 
+                 nameLower.includes('hộ lý') ||
                  (currentAccount?.email || '').toLowerCase().includes('.hl') ||
                  (currentAccount?.email || '').toLowerCase().includes('holy') ||
                  (currentUserRecord && roles && roles[currentUserRecord.role] && (roles[currentUserRecord.role].name || '').toLowerCase().includes('hộ lý'));
     if (isHl) {
       return { nhap: false, thuhoi: false, xuat: false, huy: false, dc: false, dovai: true };
     }
+
+    // 2. Check Điều dưỡng -> ONLY thu hoi allowed
+    const isDd = username === 'sim.dd' || 
+                 username === 'mai.dd' || 
+                 username === 'hoa.dd' || 
+                 username === 'ngoc.dd' || 
+                 nameLower.includes('điều dưỡng') ||
+                 (currentUserRecord && roles && roles[currentUserRecord.role] && (roles[currentUserRecord.role].name || '').toLowerCase().includes('điều dưỡng'));
+    if (isDd) {
+      return { nhap: false, thuhoi: true, xuat: false, huy: false, dc: false, dovai: false };
+    }
+
+    // 3. Check Nhân viên đồ vải -> nhap, thuhoi, xuat allowed, BUT NOT huy (Xuất hủy)
+    const isNv = username === 'sim.clean' || 
+                 username === 'minh.nv' || 
+                 (nameLower.includes('nhân viên đồ vải') && !nameLower.includes('trưởng kho')) ||
+                 (currentUserRecord && roles && roles[currentUserRecord.role] && (roles[currentUserRecord.role].name || '').toLowerCase().includes('nhân viên đồ vải') && !(roles[currentUserRecord.role].name || '').toLowerCase().includes('trưởng kho'));
+    if (isNv) {
+      return { nhap: true, thuhoi: true, xuat: true, huy: false, dc: true, dovai: true };
+    }
+
+    // 4. Check Trưởng kho đồ vải
+    const isTk = username === 'sim.tk' || 
+                 username === 'an.nv' || 
+                 nameLower.includes('trưởng kho') ||
+                 (currentUserRecord && roles && roles[currentUserRecord.role] && (roles[currentUserRecord.role].name || '').toLowerCase().includes('trưởng kho'));
+    if (isTk) {
+      return { nhap: true, thuhoi: true, xuat: true, huy: true, dc: true, dovai: true };
+    }
+
     if (currentUserRecord && roles && roles[currentUserRecord.role]) {
-      return roles[currentUserRecord.role].perms;
+      const perms = { ...roles[currentUserRecord.role].perms };
+      const roleNameLower = (roles[currentUserRecord.role].name || '').toLowerCase();
+      if (roleNameLower.includes('điều dưỡng')) {
+        return { nhap: false, thuhoi: true, xuat: false, huy: false, dc: false, dovai: false };
+      }
+      if (roleNameLower.includes('nhân viên đồ vải') && !roleNameLower.includes('trưởng kho')) {
+        perms.huy = false;
+      }
+      return perms;
     }
+
     if (propUserDept && propUserDept !== 'Tất cả' && propUserDept !== 'Tất cả (Không giới hạn)' && propUserDept !== 'Kho trung tâm') {
-      return roles[2]?.perms || { nhap: false, thuhoi: true, xuat: false, huy: false, dc: true, dovai: true };
+      return { nhap: false, thuhoi: true, xuat: false, huy: false, dc: false, dovai: false };
     }
+
     return {
       nhap: true,
       thuhoi: true,
@@ -177,6 +237,32 @@ export default function TransactionScreen({
   }, [currentAccount, currentUserRecord, roles, propUserDept]);
 
   const hasAnyCreatePerm = userPermissions.nhap || userPermissions.thuhoi || userPermissions.xuat || userPermissions.huy || userPermissions.dc;
+
+  // Auto-sync selected txType and default fromDept based on user permissions
+  React.useEffect(() => {
+    if (txType && !userPermissions[txType]) {
+      if (userPermissions.thuhoi) {
+        setTxType('thuhoi');
+      } else if (userPermissions.nhap) {
+        setTxType('nhap');
+      } else if (userPermissions.xuat) {
+        setTxType('xuat');
+      } else if (userPermissions.huy) {
+        setTxType('huy');
+      } else {
+        setTxType('');
+      }
+    }
+  }, [userPermissions, txType]);
+
+  React.useEffect(() => {
+    if (userPermissions.thuhoi && !userPermissions.nhap && !userPermissions.xuat && !userPermissions.huy) {
+      if (!txType) setTxType('thuhoi');
+      if (isRestricted && currentUserRecord?.dept && !fromDept) {
+        setFromDept(currentUserRecord.dept);
+      }
+    }
+  }, [userPermissions, isRestricted, currentUserRecord, txType, fromDept]);
 
   // 2) Helper: Live Stock lookup for any item at selected source location
   const getLiveStock = (ma: string): { label: string; qty: number } => {

@@ -440,7 +440,7 @@ export default function TransactionForm({
               }} className="px-4 py-2 border border-[#1A1A1A] text-xs font-semibold uppercase hover:bg-[#EBE8E3] cursor-pointer">Hủy Sửa</button>
             )}
             <button type="submit" className="px-5 py-2.5 bg-[#1A1A1A] text-[#F5F2ED] text-xs font-semibold uppercase hover:bg-[#C4432A] hover:border-[#C4432A] border border-[#1A1A1A] transition-colors cursor-pointer font-bold">
-              {editingTxId ? 'Lưu cập nhật 💾' : 'Xác nhận tạo phiếu 📋'}
+              {editingTxId ? 'Lưu cập nhật' : 'Xác nhận tạo phiếu'}
             </button>
           </div>
         </form>
