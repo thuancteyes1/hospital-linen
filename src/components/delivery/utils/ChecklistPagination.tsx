@@ -135,7 +135,7 @@ export default function ChecklistPagination<T = any>({
   const getTrangDeliveryCount = (trangName: string) => {
     if (!getItemDeliveryQty || itemsList.length === 0) return 0;
     return itemsList.filter(item => {
-      const itemTrang = (item as any).trang || (itemTrangMap && itemTrangMap[(item as any).ma]) || 'Trang 1';
+      const itemTrang = (itemTrangMap && itemTrangMap[(item as any).ma]) || (item as any).trang || 'Trang 1';
       return itemTrang === trangName && getItemDeliveryQty(item) > 0;
     }).length;
   };
@@ -144,7 +144,7 @@ export default function ChecklistPagination<T = any>({
   const getTrangTotalCount = (trangName: string) => {
     if (itemsList.length === 0) return 0;
     return itemsList.filter(item => {
-      const itemTrang = (item as any).trang || (itemTrangMap && itemTrangMap[(item as any).ma]) || 'Trang 1';
+      const itemTrang = (itemTrangMap && itemTrangMap[(item as any).ma]) || (item as any).trang || 'Trang 1';
       return itemTrang === trangName;
     }).length;
   };

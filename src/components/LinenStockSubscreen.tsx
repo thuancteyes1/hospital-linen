@@ -403,13 +403,6 @@ export default function LinenStockSubscreen({
             <span>Khoa giám sát: <b>{userDept}</b></span>
           </div>
         )}
-
-        <button
-          onClick={onInitTest}
-          className="px-3 py-2 border border-dashed border-[#C4432A]/40 text-[#C4432A] hover:bg-[#FDF2F0] text-xs font-bold rounded-xl transition-all uppercase tracking-wider cursor-pointer font-bold"
-        >
-          ⚡ Sinh data test
-        </button>
       </div>
 
       {/* Main Desktop Grid */}

@@ -72,6 +72,21 @@ export default function TransactionForm({
 }: TransactionFormProps) {
   const [submitError, setSubmitError] = useState('');
 
+  const userDeptMatch = useMemo(() => {
+    const raw = currentUserRecord?.dept || currentAccount?.dept || '';
+    if (!raw || raw === 'Tất cả' || raw === 'Tất cả (Không giới hạn)' || raw === 'Kho trung tâm') return '';
+    const rawLower = raw.trim().toLowerCase();
+    const found = departments.find(d => d.toLowerCase() === rawLower || d.toLowerCase().includes(rawLower) || rawLower.includes(d.toLowerCase()));
+    return found || raw;
+  }, [currentUserRecord, currentAccount, departments]);
+
+  const isRestricted = useMemo(() => {
+    if (userDeptMatch) return true;
+    if (!currentUserRecord) return false;
+    const dept = currentUserRecord.dept;
+    return dept && dept !== 'Tất cả' && dept !== 'Tất cả (Không giới hạn)' && dept !== 'Kho trung tâm';
+  }, [currentUserRecord, userDeptMatch]);
+
   // 1) Helper: Live Stock lookup for any item at selected source location
   const getLiveStock = (ma: string): { label: string; qty: number } => {
     const item = items.find(i => i.ma === ma);
@@ -344,9 +359,14 @@ export default function TransactionForm({
             {txConfig.showFrom && (
               <div>
                 <label className="block text-[10px] uppercase tracking-widest font-bold text-[#1A1A1A] mb-1">Khoa/Phòng nguồn <span className="text-[#C4432A]">*</span></label>
-                <select value={fromDept} onChange={e => setFromDept(e.target.value)} className="w-full bg-[#EBE8E3] border border-[#1A1A1A] p-2 text-xs focus:outline-none">
-                  <option value="">-- Chọn khoa phòng nguồn --</option>
-                  {departments.filter(d => d !== 'Kho trung tâm').map(d => (
+                <select
+                  value={fromDept}
+                  onChange={e => setFromDept(e.target.value)}
+                  disabled={isRestricted && !!userDeptMatch}
+                  className="w-full bg-[#EBE8E3] border border-[#1A1A1A] p-2 text-xs focus:outline-none disabled:opacity-80 disabled:bg-[#E0DDD7] font-semibold"
+                >
+                  {(!isRestricted || !userDeptMatch) && <option value="">-- Chọn khoa phòng nguồn --</option>}
+                  {(isRestricted && userDeptMatch ? [userDeptMatch] : departments.filter(d => d !== 'Kho trung tâm')).map(d => (
                     <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
@@ -356,9 +376,14 @@ export default function TransactionForm({
             {txConfig.showTo && (
               <div>
                 <label className="block text-[10px] uppercase tracking-widest font-bold text-[#1A1A1A] mb-1">Khoa/Phòng đích nhận <span className="text-[#C4432A]">*</span></label>
-                <select value={toDept} onChange={e => setToDept(e.target.value)} className="w-full bg-[#EBE8E3] border border-[#1A1A1A] p-2 text-xs focus:outline-none">
-                  <option value="">-- Chọn khoa phòng nhận --</option>
-                  {departments.filter(d => d !== 'Kho trung tâm').map(d => (
+                <select
+                  value={toDept}
+                  onChange={e => setToDept(e.target.value)}
+                  disabled={isRestricted && !!userDeptMatch}
+                  className="w-full bg-[#EBE8E3] border border-[#1A1A1A] p-2 text-xs focus:outline-none disabled:opacity-80 disabled:bg-[#E0DDD7] font-semibold"
+                >
+                  {(!isRestricted || !userDeptMatch) && <option value="">-- Chọn khoa phòng nhận --</option>}
+                  {(isRestricted && userDeptMatch ? [userDeptMatch] : departments.filter(d => d !== 'Kho trung tâm')).map(d => (
                     <option key={d} value={d}>{d}</option>
                   ))}
                 </select>

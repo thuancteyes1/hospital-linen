@@ -147,12 +147,22 @@ export default function M1CompanyTab({
 
   const filteredActiveDispatchItems = useMemo(() => {
     if (!activeDispatch) return [];
-    let list = activeDispatch.items;
+    let list = [...activeDispatch.items];
 
-    // Filter by Trang Bill
+    // 1. Sort items strictly by Trang Bill setup in master catalog (Trang 1, Trang 2...), then by item code
+    list.sort((a, b) => {
+      const trangA = itemTrangMap[a.ma] || (a as any).trang || 'Trang 1';
+      const trangB = itemTrangMap[b.ma] || (b as any).trang || 'Trang 1';
+      if (trangA !== trangB) {
+        return trangA.localeCompare(trangB, undefined, { numeric: true });
+      }
+      return a.ma.localeCompare(b.ma, undefined, { numeric: true });
+    });
+
+    // 2. Filter by selected Trang Bill
     if (m2SelectedTrang && m2SelectedTrang !== 'all') {
       list = list.filter(it => {
-        const itemTrang = (it as any).trang || itemTrangMap[it.ma] || 'Trang 1';
+        const itemTrang = itemTrangMap[it.ma] || (it as any).trang || 'Trang 1';
         return itemTrang === m2SelectedTrang;
       });
     }

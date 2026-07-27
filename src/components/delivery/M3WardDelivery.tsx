@@ -203,12 +203,22 @@ export default function M3WardDelivery({
 
   const filteredM3Items = useMemo(() => {
     if (!activeSlip) return [];
-    let list = activeSlip.items;
+    let list = [...activeSlip.items];
 
-    // Filter by Trang Bill
+    // 1. Sort items strictly by Trang Bill setup in master catalog (Trang 1, Trang 2...), then by item code
+    list.sort((a, b) => {
+      const trangA = itemTrangMap[a.ma] || (a as any).trang || 'Trang 1';
+      const trangB = itemTrangMap[b.ma] || (b as any).trang || 'Trang 1';
+      if (trangA !== trangB) {
+        return trangA.localeCompare(trangB, undefined, { numeric: true });
+      }
+      return a.ma.localeCompare(b.ma, undefined, { numeric: true });
+    });
+
+    // 2. Filter by selected Trang Bill
     if (m3SelectedTrang && m3SelectedTrang !== 'all') {
       list = list.filter(it => {
-        const itemTrang = (it as any).trang || itemTrangMap[it.ma] || 'Trang 1';
+        const itemTrang = itemTrangMap[it.ma] || (it as any).trang || 'Trang 1';
         return itemTrang === m3SelectedTrang;
       });
     }

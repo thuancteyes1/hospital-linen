@@ -146,11 +146,38 @@ export default function TransactionScreen({
     };
   }, [currentAccount, users, propUserDept, roles]);
 
+  const userDeptMatch = useMemo(() => {
+    const raw = currentUserRecord?.dept || propUserDept || '';
+    if (!raw || raw === 'Tất cả' || raw === 'Tất cả (Không giới hạn)' || raw === 'Kho trung tâm') return '';
+    const rawLower = raw.trim().toLowerCase();
+    const found = departments.find(d => d.toLowerCase() === rawLower || d.toLowerCase().includes(rawLower) || rawLower.includes(d.toLowerCase()));
+    return found || raw;
+  }, [currentUserRecord, propUserDept, departments]);
+
   const isRestricted = useMemo(() => {
+    if (userDeptMatch) return true;
     if (!currentUserRecord) return false;
     const dept = currentUserRecord.dept;
-    return dept && dept !== 'Tất cả' && dept !== 'Kho trung tâm';
-  }, [currentUserRecord]);
+    return dept && dept !== 'Tất cả' && dept !== 'Tất cả (Không giới hạn)' && dept !== 'Kho trung tâm';
+  }, [currentUserRecord, userDeptMatch]);
+
+  // Clean visual labels for form conditional states
+  const txConfig = useMemo(() => {
+    switch (txType) {
+      case 'nhap':
+        return { label: 'Nhập mua', showFrom: false, showTo: false, showSupplier: true, badge: 'bg-[#D1FAE5] text-[#065F46]' };
+      case 'thuhoi':
+        return { label: 'Thu hồi từ khoa', showFrom: true, showTo: false, showSupplier: false, badge: 'bg-[#DBEAFE] text-[#1E40AF]' };
+      case 'xuat':
+        return { label: 'Xuất cho khoa', showFrom: false, showTo: true, showSupplier: false, badge: 'bg-[#FEF3C7] text-[#92400E]' };
+      case 'huy':
+        return { label: 'Xuất hủy', showFrom: false, showTo: false, showSupplier: true, badge: 'bg-[#FEE2E2] text-[#991B1B]' };
+      case 'dc':
+        return { label: 'Điều chuyển Khoa → Khoa', showFrom: true, showTo: true, showSupplier: false, badge: 'bg-[#E5E7EB] text-[#374151]' };
+      default:
+        return { label: 'Chọn nghiệp vụ', showFrom: false, showTo: false, showSupplier: false, badge: '' };
+    }
+  }, [txType]);
 
   // Compute allowed transactions based on user's authorized role
   const userPermissions = useMemo(() => {
@@ -258,11 +285,19 @@ export default function TransactionScreen({
   React.useEffect(() => {
     if (userPermissions.thuhoi && !userPermissions.nhap && !userPermissions.xuat && !userPermissions.huy) {
       if (!txType) setTxType('thuhoi');
-      if (isRestricted && currentUserRecord?.dept && !fromDept) {
-        setFromDept(currentUserRecord.dept);
+    }
+  }, [userPermissions, txType]);
+
+  React.useEffect(() => {
+    if (isRestricted && userDeptMatch) {
+      if (txConfig.showFrom && fromDept !== userDeptMatch) {
+        setFromDept(userDeptMatch);
+      }
+      if (txConfig.showTo && toDept !== userDeptMatch) {
+        setToDept(userDeptMatch);
       }
     }
-  }, [userPermissions, isRestricted, currentUserRecord, txType, fromDept]);
+  }, [isRestricted, userDeptMatch, txConfig.showFrom, txConfig.showTo, fromDept, toDept]);
 
   // 2) Helper: Live Stock lookup for any item at selected source location
   const getLiveStock = (ma: string): { label: string; qty: number } => {
@@ -362,24 +397,6 @@ export default function TransactionScreen({
     }
     return '';
   }, [formLines]);
-
-  // 5) Clean visual labels for form conditional states
-  const txConfig = useMemo(() => {
-    switch (txType) {
-      case 'nhap':
-        return { label: 'Nhập mua', showFrom: false, showTo: false, showSupplier: true, badge: 'bg-[#D1FAE5] text-[#065F46]' };
-      case 'thuhoi':
-        return { label: 'Thu hồi từ khoa', showFrom: true, showTo: false, showSupplier: false, badge: 'bg-[#DBEAFE] text-[#1E40AF]' };
-      case 'xuat':
-        return { label: 'Xuất cho khoa', showFrom: false, showTo: true, showSupplier: false, badge: 'bg-[#FEF3C7] text-[#92400E]' };
-      case 'huy':
-        return { label: 'Xuất hủy', showFrom: false, showTo: false, showSupplier: true, badge: 'bg-[#FEE2E2] text-[#991B1B]' };
-      case 'dc':
-        return { label: 'Điều chuyển Khoa → Khoa', showFrom: true, showTo: true, showSupplier: false, badge: 'bg-[#E5E7EB] text-[#374151]' };
-      default:
-        return { label: 'Chọn nghiệp vụ', showFrom: false, showTo: false, showSupplier: false, badge: '' };
-    }
-  }, [txType]);
 
   // 6) Form submit and strict balance check validation
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -566,9 +583,10 @@ export default function TransactionScreen({
                   <select
                     value={txType}
                     onChange={e => {
-                      setTxType(e.target.value as any);
-                      setFromDept('');
-                      setToDept('');
+                      const newType = e.target.value as any;
+                      setTxType(newType);
+                      setFromDept(isRestricted && userDeptMatch ? userDeptMatch : '');
+                      setToDept(isRestricted && userDeptMatch ? userDeptMatch : '');
                       setSupplier('');
                       setSubmitError('');
                     }}
@@ -603,10 +621,11 @@ export default function TransactionScreen({
                     <select
                       value={fromDept}
                       onChange={e => setFromDept(e.target.value)}
-                      className="w-full bg-[#EBE8E3] border border-[#1A1A1A] p-2 text-xs focus:outline-none"
+                      disabled={isRestricted && !!userDeptMatch}
+                      className="w-full bg-[#EBE8E3] border border-[#1A1A1A] p-2 text-xs focus:outline-none disabled:opacity-80 disabled:bg-[#E0DDD7] font-semibold"
                     >
-                      <option value="">-- Chọn khoa bàn giao --</option>
-                      {departments.map(d => (
+                      {(!isRestricted || !userDeptMatch) && <option value="">-- Chọn khoa bàn giao --</option>}
+                      {(isRestricted && userDeptMatch ? [userDeptMatch] : departments.filter(d => d !== 'Kho trung tâm')).map(d => (
                         <option key={d} value={d}>{d}</option>
                       ))}
                     </select>
@@ -621,10 +640,11 @@ export default function TransactionScreen({
                     <select
                       value={toDept}
                       onChange={e => setToDept(e.target.value)}
-                      className="w-full bg-[#EBE8E3] border border-[#1A1A1A] p-2 text-xs focus:outline-none"
+                      disabled={isRestricted && !!userDeptMatch}
+                      className="w-full bg-[#EBE8E3] border border-[#1A1A1A] p-2 text-xs focus:outline-none disabled:opacity-80 disabled:bg-[#E0DDD7] font-semibold"
                     >
-                      <option value="">-- Chọn khoa nhận hàng --</option>
-                      {departments.map(d => (
+                      {(!isRestricted || !userDeptMatch) && <option value="">-- Chọn khoa nhận hàng --</option>}
+                      {(isRestricted && userDeptMatch ? [userDeptMatch] : departments.filter(d => d !== 'Kho trung tâm')).map(d => (
                         <option key={d} value={d}>{d}</option>
                       ))}
                     </select>
