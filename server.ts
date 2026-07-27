@@ -4,7 +4,7 @@ import { createServer as createViteServer } from 'vite';
 import * as dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { db } from './src/db/index.ts';
+import { db, isDbConfigured } from './src/db/index.ts';
 import { users, linenItems, deptAllocations, deliverySlips, laundryDispatches, history } from './src/db/schema.ts';
 import { eq, or } from 'drizzle-orm';
 import { initializeApp, getApps } from 'firebase-admin/app';
@@ -35,6 +35,10 @@ const PORT = 3000;
 
 // --- DATABASE SEEDING ON STARTUP ---
 async function seedDatabaseIfEmpty() {
+  if (!isDbConfigured()) {
+    console.log('SQL Database is not configured. Skipping seeding.');
+    return;
+  }
   try {
     const existingItems = await db.select().from(linenItems).limit(1);
     if (existingItems.length > 0) {
@@ -170,6 +174,10 @@ async function seedDatabaseIfEmpty() {
 }
 
 async function healUserPasswords() {
+  if (!isDbConfigured()) {
+    console.log('SQL Database is not configured. Skipping password heal.');
+    return;
+  }
   try {
     let dbUsers = await db.select().from(users);
     const { INITIAL_ACCOUNTS, INITIAL_USERS } = await import('./src/data.ts');
@@ -303,6 +311,12 @@ app.post('/api/reset', async (req, res) => {
     console.error('Database reset failed:', err);
     res.status(500).json({ error: 'Reset failed' });
   }
+});
+
+// Global error middleware to ensure JSON response for Vercel/Express
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Unhandled server error:', err);
+  res.status(500).json({ error: err?.message || 'Lỗi xử lý hệ thống trên máy chủ.' });
 });
 
 // --- VITE MIDDLEWARE CONFIGURATION ---

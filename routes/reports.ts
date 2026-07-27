@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { db } from '../src/db/index.ts';
+import { db, isDbConfigured } from '../src/db/index.ts';
 import { history } from '../src/db/schema.ts';
 
 const router = Router();
@@ -15,30 +15,38 @@ router.get('/', async (req, res) => {
 });
 
 export async function getReportsData() {
-  const dbHistory = await db.select().from(history);
+  if (!isDbConfigured()) {
+    return { history: [] };
+  }
+  try {
+    const dbHistory = await db.select().from(history);
 
-  // Map history log
-  const historyList = dbHistory.map((h) => ({
-    id: h.id,
-    type: h.type as any,
-    date: h.date,
-    user: h.user,
-    note: h.note,
-    from: h.fromDept,
-    to: h.toDept,
-    items: JSON.parse(h.items),
-    status: h.status as any,
-    rejectReason: h.rejectReason || undefined,
-    confirmedBy: h.confirmedBy || undefined,
-    confirmedAt: h.confirmedAt || undefined,
-    movementApplied: h.movementApplied,
-    createdAt: h.createdAt || undefined,
-    creatorDept: h.creatorDept || undefined
-  }));
+    // Map history log
+    const historyList = dbHistory.map((h) => ({
+      id: h.id,
+      type: h.type as any,
+      date: h.date,
+      user: h.user,
+      note: h.note,
+      from: h.fromDept,
+      to: h.toDept,
+      items: JSON.parse(h.items),
+      status: h.status as any,
+      rejectReason: h.rejectReason || undefined,
+      confirmedBy: h.confirmedBy || undefined,
+      confirmedAt: h.confirmedAt || undefined,
+      movementApplied: h.movementApplied,
+      createdAt: h.createdAt || undefined,
+      creatorDept: h.creatorDept || undefined
+    }));
 
-  return {
-    history: historyList
-  };
+    return {
+      history: historyList
+    };
+  } catch (err) {
+    console.warn('PostgreSQL query failed in getReportsData, returning empty history:', err);
+    return { history: [] };
+  }
 }
 
 export async function syncReportsData(tx: any, reqHistory: any[]) {

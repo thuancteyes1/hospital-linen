@@ -149,9 +149,13 @@ export default function UserManagement({
     const nextUsers = [...users];
     const nextAccounts = [...accounts];
 
+    const rawInput = uEmail.trim().toLowerCase();
+    const formattedEmail = rawInput.includes('@') ? rawInput : `${rawInput}@hospital.local`;
+    const usernameVal = rawInput.split('@')[0];
+
     const userObj: User = {
       name: uName.trim(),
-      email: uEmail.trim().toLowerCase(),
+      email: formattedEmail,
       role: uRole,
       dept: uDept || 'Tất cả',
       status: uStatus
@@ -162,8 +166,8 @@ export default function UserManagement({
       nextUsers.push(userObj);
 
       nextAccounts.push({
-        username: uEmail.trim().split('@')[0].toLowerCase(),
-        email: uEmail.trim().toLowerCase(),
+        username: usernameVal,
+        email: formattedEmail,
         password: uPass || '123456',
         name: uName.trim(),
         isAdmin: false,
@@ -178,7 +182,8 @@ export default function UserManagement({
       const accIdx = nextAccounts.findIndex(a => a.userIdx === idx);
       if (accIdx >= 0) {
         nextAccounts[accIdx].name = uName.trim();
-        nextAccounts[accIdx].email = uEmail.trim().toLowerCase();
+        nextAccounts[accIdx].email = formattedEmail;
+        nextAccounts[accIdx].username = usernameVal;
         nextAccounts[accIdx].status = uStatus;
         if (uPass) nextAccounts[accIdx].password = uPass;
       }
@@ -464,12 +469,12 @@ export default function UserManagement({
 
                 <div>
                   <label className="block text-[10px] uppercase tracking-widest font-bold text-[#1A1A1A] mb-1">
-                    Email / Tên đăng nhập <span className="text-[#C4432A]">*</span>
+                    Tên đăng nhập / Email <span className="text-[#C4432A]">*</span>
                   </label>
                   <input
-                    type="email"
+                    type="text"
                     required
-                    placeholder="VD: lan.tt@hospital.vn"
+                    placeholder="VD: nguyena hoặc email@hospital.vn"
                     value={uEmail}
                     onChange={e => setUEmail(e.target.value)}
                     className="w-full bg-[#EBE8E3] border border-[#1A1A1A] p-2 text-xs focus:outline-none"

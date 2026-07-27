@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { db } from '../src/db/index.ts';
+import { db, isDbConfigured } from '../src/db/index.ts';
 import { deliverySlips, laundryDispatches } from '../src/db/schema.ts';
 
 const router = Router();
@@ -15,26 +15,42 @@ router.get('/', async (req, res) => {
 });
 
 export async function getDeliveryData() {
-  const dbSlips = await db.select().from(deliverySlips);
-  const dbDispatches = await db.select().from(laundryDispatches);
+  if (!isDbConfigured()) {
+    const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data.ts');
+    return {
+      wardDeliverySlips: INITIAL_WARD_DELIVERY_SLIPS,
+      laundryDispatches: INITIAL_LAUNDRY_DISPATCHES
+    };
+  }
+  try {
+    const dbSlips = await db.select().from(deliverySlips);
+    const dbDispatches = await db.select().from(laundryDispatches);
 
-  // Map slips
-  const slipsList = dbSlips.map((s) => ({
-    ...s,
-    items: JSON.parse(s.items)
-  }));
+    // Map slips
+    const slipsList = dbSlips.map((s) => ({
+      ...s,
+      items: JSON.parse(s.items)
+    }));
 
-  // Map dispatches
-  const dispatchesList = dbDispatches.map((d) => ({
-    ...d,
-    linkedSlipIds: JSON.parse(d.linkedSlipIds),
-    items: JSON.parse(d.items)
-  }));
+    // Map dispatches
+    const dispatchesList = dbDispatches.map((d) => ({
+      ...d,
+      linkedSlipIds: JSON.parse(d.linkedSlipIds),
+      items: JSON.parse(d.items)
+    }));
 
-  return {
-    wardDeliverySlips: slipsList,
-    laundryDispatches: dispatchesList
-  };
+    return {
+      wardDeliverySlips: slipsList,
+      laundryDispatches: dispatchesList
+    };
+  } catch (err) {
+    console.warn('PostgreSQL query failed in getDeliveryData, falling back to static data:', err);
+    const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data.ts');
+    return {
+      wardDeliverySlips: INITIAL_WARD_DELIVERY_SLIPS,
+      laundryDispatches: INITIAL_LAUNDRY_DISPATCHES
+    };
+  }
 }
 
 export async function syncDeliveryData(tx: any, wardDeliverySlips: any[], reqDispatches: any[]) {
