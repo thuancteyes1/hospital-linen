@@ -21,7 +21,12 @@ import {
   RefreshCw,
   Settings,
   Trash2,
-  X
+  X,
+  XCircle,
+  Info,
+  CheckCircle2,
+  AlertTriangle,
+  Check
 } from 'lucide-react';
 import M1DirtyDeclaration from './delivery/M1DirtyDeclaration';
 import M2CompanyClean from './delivery/M2CompanyClean';
@@ -283,7 +288,7 @@ export default function DeliveryFlow({
               : 'bg-emerald-50 border-emerald-200 text-emerald-800'
         }`}>
           <div className="flex items-center gap-2 text-xs font-bold leading-relaxed whitespace-pre-line">
-            {toast.type === 'error' ? '❌' : toast.type === 'info' ? 'ℹ️' : '✓'} {toast.message}
+            {toast.type === 'error' ? <XCircle size={15} className="shrink-0 text-rose-600" /> : toast.type === 'info' ? <Info size={15} className="shrink-0 text-blue-600" /> : <CheckCircle2 size={15} className="shrink-0 text-emerald-600" />} {toast.message}
           </div>
         </div>
       )}
@@ -562,9 +567,10 @@ export default function DeliveryFlow({
               <button
                 onClick={handleSaveDirtyStoreAdjustment}
                 disabled={Object.keys(dirtyStoreAdjustmentQtys).length === 0}
-                className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-md cursor-pointer"
+                className="flex items-center justify-center gap-1.5 flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-md cursor-pointer"
               >
-                Cập Nhật & Cân Đối ✓
+                <Check size={14} />
+                <span>Cập Nhật & Cân Đối</span>
               </button>
             </div>
           </div>
@@ -576,7 +582,9 @@ export default function DeliveryFlow({
         <div className="fixed inset-0 bg-black/65 backdrop-blur-xs flex items-center justify-center z-51 p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-stone-200 p-6 flex flex-col">
             <div className="flex items-center gap-3 text-red-600 pb-2 border-b border-stone-100">
-              <span className="text-2xl">⚠️</span>
+              <div className="p-2 bg-red-100 text-red-600 rounded-xl">
+                <AlertTriangle size={18} />
+              </div>
               <h4 className="font-serif font-black text-base uppercase tracking-tight text-stone-800 font-bold">
                 Xác nhận xóa dữ liệu
               </h4>
@@ -607,9 +615,10 @@ export default function DeliveryFlow({
               </button>
               <button
                 onClick={() => executeConfirmedCleanup(cleanupPendingType)}
-                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black rounded-xl shadow-md cursor-pointer"
+                className="flex items-center justify-center gap-1.5 flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black rounded-xl shadow-md cursor-pointer"
               >
-                Đồng ý Xóa ngay 🧹
+                <Trash2 size={14} />
+                <span>Đồng ý Xóa ngay</span>
               </button>
             </div>
           </div>

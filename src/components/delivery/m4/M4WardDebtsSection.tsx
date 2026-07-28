@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, Building } from 'lucide-react';
+import { Search, X, Building, AlertTriangle, AlertOctagon, Clock, Link, Zap, Lock, CheckCircle2 } from 'lucide-react';
 import { WardDeliverySlip } from '../../../types';
 
 interface M4WardDebtsSectionProps {
@@ -185,15 +185,15 @@ export default function M4WardDebtsSection({
             if (ageDays >= 10) {
               ageBadgeClass = 'bg-red-100 text-red-800 border-red-300 animate-pulse';
               cardBorderClass = 'border-red-300 shadow-xs shadow-red-100';
-              ageStatusText = 'Nợ nghiêm trọng 🚨';
+              ageStatusText = 'Nợ nghiêm trọng';
             } else if (ageHours > 48) {
               ageBadgeClass = 'bg-red-50 text-red-700 border-red-200';
               cardBorderClass = 'border-red-300';
-              ageStatusText = 'Quá hạn >48h ⚠️';
+              ageStatusText = 'Quá hạn >48h';
             } else if (ageHours >= 24) {
               ageBadgeClass = 'bg-amber-100 text-amber-800 border-amber-200';
               cardBorderClass = 'border-amber-200';
-              ageStatusText = 'Cần đối soát 🕒';
+              ageStatusText = 'Cần đối soát';
             }
 
             const isInlineOpen = inlineSettleSlipId === slip.id;
@@ -221,8 +221,14 @@ export default function M4WardDebtsSection({
 
                   {slip.originalSlipId && (
                     <div className="bg-stone-50 border border-stone-200 rounded-lg p-2 text-[10px] text-stone-600 mb-3 space-y-0.5">
-                      <div>🔗 <b>Mã đơn dơ gốc:</b> <span className="font-mono font-bold text-stone-800 bg-white px-1 border rounded">{slip.originalSlipId}</span></div>
-                      <div>🕒 <b>Ngày nhận dơ gốc:</b> <span className="font-medium text-stone-800">{slip.originalCreatedAt}</span></div>
+                      <div className="flex items-center gap-1">
+                        <Link size={12} className="text-stone-500 shrink-0" />
+                        <span><b>Mã đơn dơ gốc:</b> <span className="font-mono font-bold text-stone-800 bg-white px-1 border rounded">{slip.originalSlipId}</span></span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock size={12} className="text-stone-500 shrink-0" />
+                        <span><b>Ngày nhận dơ gốc:</b> <span className="font-medium text-stone-800">{slip.originalCreatedAt}</span></span>
+                      </div>
                     </div>
                   )}
 
@@ -250,9 +256,10 @@ export default function M4WardDebtsSection({
                       <div ref={detailSectionRef} className="bg-rose-50 border border-rose-200 rounded-xl p-3 space-y-3 scroll-mt-6">
                         <div className="flex justify-between items-center pb-1.5 border-b border-rose-100">
                           <span className="text-[10px] font-black uppercase text-rose-800 tracking-wider flex items-center gap-1 font-bold">
-                            ⚡ Đối chiếu & Thu hồi nợ nhanh
+                            <Zap size={13} className="text-amber-600" />
+                            <span>Đối chiếu & Thu hồi nợ nhanh</span>
                           </span>
-                          <button onClick={() => setInlineSettleSlipId(null)} className="text-stone-400 hover:text-stone-600 text-xs font-bold cursor-pointer font-bold">
+                          <button onClick={() => setInlineSettleSlipId(null)} className="text-stone-400 hover:text-stone-600 text-xs font-bold cursor-pointer">
                             ✕
                           </button>
                         </div>
@@ -294,7 +301,8 @@ export default function M4WardDebtsSection({
                           }}
                           className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black uppercase rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer font-bold"
                         >
-                          Hoàn Tất Thu Hồi Nợ
+                          <CheckCircle2 size={14} />
+                          <span>Hoàn Tất Thu Hồi Nợ</span>
                         </button>
                       </div>
                     ) : (
@@ -312,7 +320,8 @@ export default function M4WardDebtsSection({
                           }}
                           className="flex-1 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold uppercase rounded-lg border border-rose-200 shadow-3xs flex items-center justify-center gap-1 transition-all cursor-pointer font-bold"
                         >
-                          ⚡ Thu Hồi Nợ Nhanh
+                          <Zap size={13} className="text-amber-600" />
+                          <span>Thu Hồi Nợ Nhanh</span>
                         </button>
                         <button
                           onClick={() => {
@@ -334,8 +343,9 @@ export default function M4WardDebtsSection({
                       </div>
                     )
                   ) : (
-                    <div className="text-center py-1.5 bg-rose-50 border border-rose-100 rounded-lg text-[10px] font-semibold text-rose-700">
-                      🔒 Chờ Nhân viên đồ vải trả bù sạch cho Khoa
+                    <div className="text-center py-1.5 bg-rose-50 border border-rose-100 rounded-lg text-[10px] font-semibold text-rose-700 flex items-center justify-center gap-1">
+                      <Lock size={12} className="text-rose-600 shrink-0" />
+                      <span>Chờ Nhân viên đồ vải trả bù sạch cho Khoa</span>
                     </div>
                   )}
                 </div>

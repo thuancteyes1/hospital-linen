@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Shirt, TrendingUp, BarChart3 } from 'lucide-react';
+import { Shirt, TrendingUp, BarChart3, AlertTriangle } from 'lucide-react';
 import { Account } from '../../types';
 
 interface HeaderProps {
@@ -28,8 +28,8 @@ export default function Header({
         <div>
           {!isOnline && (
             <div className="mb-1">
-              <span className="px-1.5 py-0 text-[8px] font-black uppercase tracking-wider rounded bg-amber-500 text-white animate-pulse">
-                ⚠️ Chế độ ngoại tuyến (Tự động lưu nháp)
+              <span className="px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded bg-amber-500 text-white animate-pulse inline-flex items-center gap-1">
+                <AlertTriangle size={11} /> Chế độ ngoại tuyến (Tự động lưu nháp)
               </span>
             </div>
           )}

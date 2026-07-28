@@ -13,7 +13,11 @@ import {
   Bed,
   Camera,
   ClipboardCheck,
-  Truck
+  Truck,
+  Plus,
+  Zap,
+  Lock,
+  CheckCircle2
 } from 'lucide-react';
 import { generateDailySlipId } from '../../../data';
 import { checkPermission } from '../utils/checkPermission';
@@ -614,17 +618,24 @@ export default function M1CompanyTab({
                     title={existingPendingDispatch ? `Cộng thêm ${pendingCount} phiếu phát sinh vào Bill ${existingPendingDispatch.id}` : "Tự động cộng dồn tất cả phiếu khoa phòng đã duyệt trong ngày"}
                   >
                     {existingPendingDispatch ? (
-                      <>➕ CỘNG BỔ SUNG VÀO BILL TỔNG ({pendingCount} phiếu phát sinh)</>
+                      <>
+                        <Plus size={14} />
+                        <span>CỘNG BỔ SUNG VÀO BILL TỔNG ({pendingCount} phiếu phát sinh)</span>
+                      </>
                     ) : (
-                      <>⚡ CỘNG TẤT CẢ BILL TRONG NGÀY ({pendingCount} phiếu)</>
+                      <>
+                        <Zap size={14} className="text-amber-200" />
+                        <span>CỘNG TẤT CẢ BILL TRONG NGÀY ({pendingCount} phiếu)</span>
+                      </>
                     )}
                   </button>
                 );
               })()}
             </div>
           ) : (
-            <div className="p-2.5 bg-stone-100 border border-stone-200 rounded-lg text-center text-[10px] text-stone-500 font-medium font-bold">
-              🔒 Chức năng cộng dồn phiếu nội bộ BV dành cho NV Đồ vải BV.
+            <div className="p-2.5 bg-stone-100 border border-stone-200 rounded-lg text-center text-[10px] text-stone-500 font-medium font-bold flex items-center justify-center gap-1">
+              <Lock size={12} className="text-stone-400 shrink-0" />
+              <span>Chức năng cộng dồn phiếu nội bộ BV dành cho NV Đồ vải BV.</span>
             </div>
           )}
         </div>
@@ -1111,8 +1122,9 @@ export default function M1CompanyTab({
               </table>
             </div>
 
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center text-xs text-emerald-800 font-medium">
-              ✓ Phiếu đã hoàn tất thủ tục bàn giao cho xưởng giặt. Bấm <b>In Bill</b> để xuất biên bản giao nhận.
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center text-xs text-emerald-800 font-medium flex items-center justify-center gap-1.5">
+              <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
+              <span>Phiếu đã hoàn tất thủ tục bàn giao cho xưởng giặt. Bấm <b>In Bill</b> để xuất biên bản giao nhận.</span>
             </div>
           </div>
         ) : (

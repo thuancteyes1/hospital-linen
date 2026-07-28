@@ -9,7 +9,7 @@ import {
   WardDeliverySlip, 
   LaundryDispatch, 
   Account, 
-  User, 
+  User as UserType, 
   Role 
 } from '../../types';
 import { 
@@ -24,7 +24,12 @@ import {
   Printer,
   Factory,
   Bed,
-  Camera
+  Camera,
+  AlertTriangle,
+  CheckCircle2,
+  Building2,
+  User as UserIcon,
+  DoorClosed
 } from 'lucide-react';
 import { checkPermission } from './utils/checkPermission';
 import ChecklistPagination from './utils/ChecklistPagination';
@@ -33,7 +38,7 @@ import PrintBillModal, { PrintBillData } from './utils/PrintBillModal';
 interface M2CompanyCleanProps {
   items: LinenItem[];
   currentAccount: Account | null;
-  users: User[];
+  users: UserType[];
   roles: Role[];
   wardDeliverySlips: WardDeliverySlip[];
   laundryDispatches: LaundryDispatch[];
@@ -439,7 +444,8 @@ export default function M2CompanyClean({
               {/* Kho đồ sạch tại Bệnh viện (Hiện có) */}
               <div className="border border-emerald-300 bg-emerald-50/45 rounded-xl p-4 shadow-sm">
                 <span className="text-xs font-black uppercase text-emerald-800 tracking-wider block mb-2 flex items-center gap-1.5 font-bold">
-                  ✨ Kho đồ sạch tại Bệnh viện
+                  <Sparkles size={14} className="text-emerald-600" />
+                  Kho đồ sạch tại Bệnh viện
                 </span>
                 <div className="space-y-1.5 max-h-[160px] overflow-y-auto">
                   {Object.keys(temporaryCleanStore).filter(ma => (temporaryCleanStore[ma] || 0) > 0).length > 0 ? (
@@ -840,15 +846,17 @@ export default function M2CompanyClean({
                       return totalDebt > 0 ? (
                         <div className="bg-rose-100 border border-rose-300 rounded-lg p-2.5 text-rose-900 text-xs font-bold flex items-center justify-between shadow-inner">
                           <span className="flex items-center gap-1.5">
-                            ⚠️ <b>PHÁT HIỆN NỢ:</b> Giao thiếu {totalDebt} cái so với lúc nhận xe.
+                            <AlertTriangle size={15} className="text-rose-600 shrink-0" />
+                            <span><b>PHÁT HIỆN NỢ:</b> Giao thiếu {totalDebt} cái so với lúc nhận xe.</span>
                           </span>
                           <span className="text-[10px] bg-rose-600 text-white font-extrabold px-2 py-0.5 rounded shadow">
                             Tự động tách 1 Bill Nợ Cty
                           </span>
                         </div>
                       ) : (
-                        <div className="bg-emerald-100 border border-emerald-300 rounded-lg p-2.5 text-emerald-900 text-xs font-bold flex items-center gap-1.5 shadow-inner font-bold">
-                          ✓ Hóa đơn trả đủ 100% số lượng giao xưởng, không phát sinh nợ.
+                        <div className="bg-emerald-100 border border-emerald-300 rounded-lg p-2.5 text-emerald-900 text-xs font-bold flex items-center gap-1.5 shadow-inner">
+                          <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
+                          <span>Hóa đơn trả đủ 100% số lượng giao xưởng, không phát sinh nợ.</span>
                         </div>
                       );
                     })()}
@@ -862,8 +870,9 @@ export default function M2CompanyClean({
                         </button>
                       </div>
                     ) : (
-                      <p className="text-[10px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200 italic font-bold">
-                        ⚠️ Phiếu đã lập trả sạch về bệnh viện. Chờ Trưởng kho hoặc Nhân viên đồ vải kiểm nhận thực tế và xác nhận.
+                      <p className="text-[10px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200 italic font-bold flex items-center gap-1.5">
+                        <AlertTriangle size={14} className="text-amber-600 shrink-0" />
+                        <span>Phiếu đã lập trả sạch về bệnh viện. Chờ Trưởng kho hoặc Nhân viên đồ vải kiểm nhận thực tế và xác nhận.</span>
                       </p>
                     )}
                   </div>
@@ -872,17 +881,22 @@ export default function M2CompanyClean({
                 {activeDispatch.status === 'completed' && (
                   <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800 space-y-1.5">
                     <div className="flex items-center justify-between font-bold">
-                      <span>✓ HÓA ĐƠN TRẢ SẠCH ĐÃ HOÀN TẤT ĐỐI CHIẾU</span>
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle2 size={15} className="text-emerald-600" />
+                        HÓA ĐƠN TRẢ SẠCH ĐÃ HOÀN TẤT ĐỐI CHIẾU
+                      </span>
                       <span className="text-[10px] bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded">Đã nhập kho sạch BV</span>
                     </div>
                     {activeDispatch.cleanReturnedBy && (
-                      <p className="text-[11px] text-stone-600">
-                        🏢 Cty lập bill: <b>{activeDispatch.cleanReturnedBy}</b> {activeDispatch.cleanReturnedAt ? `(${activeDispatch.cleanReturnedAt})` : ''}
+                      <p className="text-[11px] text-stone-600 flex items-center gap-1">
+                        <Building2 size={13} className="text-stone-500 shrink-0" />
+                        <span>Cty lập bill: <b>{activeDispatch.cleanReturnedBy}</b> {activeDispatch.cleanReturnedAt ? `(${activeDispatch.cleanReturnedAt})` : ''}</span>
                       </p>
                     )}
                     {activeDispatch.hospitalVerifiedBy && (
-                      <p className="text-[11px] text-emerald-900 font-bold">
-                        👤 NV Bệnh viện xác nhận: <b>{activeDispatch.hospitalVerifiedBy}</b> {activeDispatch.hospitalVerifiedAt ? `(${activeDispatch.hospitalVerifiedAt})` : ''}
+                      <p className="text-[11px] text-emerald-900 font-bold flex items-center gap-1">
+                        <UserIcon size={13} className="text-emerald-700 shrink-0" />
+                        <span>NV Bệnh viện xác nhận: <b>{activeDispatch.hospitalVerifiedBy}</b> {activeDispatch.hospitalVerifiedAt ? `(${activeDispatch.hospitalVerifiedAt})` : ''}</span>
                       </p>
                     )}
                   </div>

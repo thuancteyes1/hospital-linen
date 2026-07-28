@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
-import { Upload, FileUp, X, Check, Download } from 'lucide-react';
+import { Upload, FileUp, X, Check, Download, AlertTriangle, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { LinenItem, LINEN_GROUPS } from '../../types';
 
 interface LinenStockExcelImportModalProps {
@@ -400,23 +400,25 @@ export default function LinenStockExcelImportModal({ onClose, onConfirm, departm
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setExcelImportMode('overwrite')}
-                    className={`py-2 px-3 border text-center font-bold rounded-lg cursor-pointer ${
+                    className={`py-2 px-3 border text-center font-bold rounded-lg cursor-pointer flex items-center justify-center gap-1.5 ${
                       excelImportMode === 'overwrite'
                         ? 'border-red-600 bg-red-50 text-red-700'
                         : 'border-stone-200 bg-stone-50 text-stone-600'
                     }`}
                   >
-                    ⚠️ Ghi đè toàn bộ
+                    <AlertTriangle size={14} />
+                    <span>Ghi đè toàn bộ</span>
                   </button>
                   <button
                     onClick={() => setExcelImportMode('merge')}
-                    className={`py-2 px-3 border text-center font-bold rounded-lg cursor-pointer ${
+                    className={`py-2 px-3 border text-center font-bold rounded-lg cursor-pointer flex items-center justify-center gap-1.5 ${
                       excelImportMode === 'merge'
                         ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
                         : 'border-stone-200 bg-stone-50 text-stone-600'
                     }`}
                   >
-                    🔄 Gộp / Bổ sung mới
+                    <RefreshCw size={14} />
+                    <span>Gộp / Bổ sung mới</span>
                   </button>
                 </div>
                 <p className="text-[10px] text-stone-400 italic">
@@ -430,9 +432,10 @@ export default function LinenStockExcelImportModal({ onClose, onConfirm, departm
               <button
                 disabled={!excelParsedData}
                 onClick={handleConfirm}
-                className="px-4 py-2 bg-[#1A1A1A] text-[#F5F2ED] text-xs font-semibold uppercase tracking-wider hover:bg-emerald-700 hover:border-emerald-700 border border-[#1A1A1A] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-[#1A1A1A] text-[#F5F2ED] text-xs font-semibold uppercase tracking-wider hover:bg-emerald-700 hover:border-emerald-700 border border-[#1A1A1A] disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
               >
-                Nhập Kho Excel ✅
+                <CheckCircle2 size={14} />
+                <span>Nhập Kho Excel</span>
               </button>
             </div>
           </div>

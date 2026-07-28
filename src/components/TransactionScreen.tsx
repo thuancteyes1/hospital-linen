@@ -1078,8 +1078,9 @@ export default function TransactionScreen({
 
                       {/* Informational help text if user is not authorized */}
                       {isPending && !userCanApprove && (
-                        <div className="mt-2 text-[10px] text-[#D97706] italic font-medium">
-                          ⚠ Đang chờ thủ kho / điều dưỡng khoa "{h.to}" bấm xác nhận bàn bàn giao đồ vải.
+                        <div className="mt-2 text-[10px] text-[#D97706] italic font-medium flex items-center gap-1">
+                          <AlertTriangle size={11} className="shrink-0" />
+                          <span>Đang chờ thủ kho / điều dưỡng khoa "{h.to}" bấm xác nhận bàn giao đồ vải.</span>
                         </div>
                       )}
 

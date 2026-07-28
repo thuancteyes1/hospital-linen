@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Plus, Edit, Trash, AlertTriangle, Check, X, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Edit, Trash, AlertTriangle, Check, X, GripVertical } from 'lucide-react';
 
 interface DepartmentManagementProps {
   departments: string[];
@@ -103,7 +103,7 @@ export default function DepartmentManagement({
         <div className="px-4 py-2 bg-[#F5F2ED] border-b border-[#1A1A1A] text-[11px] text-[#555] flex items-center justify-between">
           <span className="flex items-center gap-1.5 font-medium">
             <GripVertical size={14} className="text-slate-500" />
-            Mẹo: Kéo thả biểu tượng <strong>⠿</strong> hoặc dùng các nút mũi tên <strong>⬆ ⬇</strong> để sắp xếp thứ tự hiển thị của các khoa phòng.
+            Mẹo: Kéo thả biểu tượng <strong>⠿</strong> ở đầu hàng để thay đổi vị trí thứ tự hiển thị của các khoa phòng.
           </span>
           <span className="font-mono text-[10px] text-slate-500">Tổng số: {departments.length} khoa</span>
         </div>
@@ -113,7 +113,7 @@ export default function DepartmentManagement({
               <th className="py-3 px-2 w-10 border-r border-[#1A1A1A] text-center"></th>
               <th className="py-3 px-3 w-14 border-r border-[#1A1A1A] text-center">STT</th>
               <th className="py-3 px-4 border-r border-[#1A1A1A]">Tên Khoa Phòng Lâm Sàng</th>
-              <th className="py-3 px-4 text-center w-64">Thao tác & Thứ tự</th>
+              <th className="py-3 px-4 text-center w-48">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#1A1A1A]">
@@ -221,28 +221,6 @@ export default function DepartmentManagement({
                       </div>
                     ) : (
                       <div className="flex justify-center items-center gap-1.5">
-                        {/* Up/Down ordering buttons */}
-                        <div className="flex border border-[#1A1A1A] divide-x divide-[#1A1A1A] mr-2">
-                          <button
-                            type="button"
-                            disabled={idx === 0}
-                            onClick={() => moveDept(idx, idx - 1)}
-                            className="p-1 hover:bg-[#EBE8E3] disabled:opacity-30 disabled:hover:bg-transparent text-[#1A1A1A]"
-                            title="Lên trên"
-                          >
-                            <ArrowUp size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            disabled={idx === departments.length - 1}
-                            onClick={() => moveDept(idx, idx + 1)}
-                            className="p-1 hover:bg-[#EBE8E3] disabled:opacity-30 disabled:hover:bg-transparent text-[#1A1A1A]"
-                            title="Xuống dưới"
-                          >
-                            <ArrowDown size={12} />
-                          </button>
-                        </div>
-
                         <button
                           onClick={() => {
                             setEditingDeptIdx(idx);

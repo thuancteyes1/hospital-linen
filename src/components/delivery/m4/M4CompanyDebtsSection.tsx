@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Search, X, Clock, FileCheck, FileText, Truck } from 'lucide-react';
+import { Search, X, Clock, FileCheck, FileText, Truck, AlertTriangle, AlertOctagon, CheckCircle2, Send, Building2 } from 'lucide-react';
 import { LaundryDispatch } from '../../../types';
 
 interface M4CompanyDebtsSectionProps {
@@ -179,19 +179,19 @@ export default function M4CompanyDebtsSection({
             if (dispatch.status === 'completed') {
               ageBadgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
               cardBorderClass = 'border-emerald-200 bg-emerald-50/10';
-              ageStatusText = 'Đã tất toán ✓';
+              ageStatusText = 'Đã tất toán';
             } else if (ageDays >= 10) {
               ageBadgeClass = 'bg-red-100 text-red-800 border-red-300 animate-pulse';
               cardBorderClass = 'border-red-300 bg-white shadow-xs';
-              ageStatusText = 'Nợ nghiêm trọng 🚨';
+              ageStatusText = 'Nợ nghiêm trọng';
             } else if (ageHours > 48) {
               ageBadgeClass = 'bg-red-50 text-red-700 border-red-200';
               cardBorderClass = 'border-red-300 bg-white';
-              ageStatusText = 'Quá hạn >48h ⚠️';
+              ageStatusText = 'Quá hạn >48h';
             } else if (ageHours >= 24) {
               ageBadgeClass = 'bg-amber-100 text-amber-800 border-amber-200';
               cardBorderClass = 'border-amber-200 bg-white';
-              ageStatusText = 'Cần đối soát 🕒';
+              ageStatusText = 'Cần đối soát';
             }
 
             const totalOwedQty = dispatch.items.reduce((sum, item) => {
@@ -210,9 +210,15 @@ export default function M4CompanyDebtsSection({
                       {dispatch.id}
                     </span>
                     <div className="text-xs font-bold text-stone-800 flex flex-wrap items-center gap-2">
-                      <span>🏢 Xưởng giặt: <strong className="text-indigo-700">{dispatch.contractor || 'Xưởng Giặt Cty'}</strong></span>
+                      <span className="flex items-center gap-1">
+                        <Building2 size={13} className="text-stone-400" />
+                        <span>Xưởng giặt: <strong className="text-indigo-700">{dispatch.contractor || 'Xưởng Giặt Cty'}</strong></span>
+                      </span>
                       <span className="text-stone-300">•</span>
-                      <span>🚛 Xe: <b>{dispatch.plate || 'Chưa rõ'}</b></span>
+                      <span className="flex items-center gap-1">
+                        <Truck size={13} className="text-stone-400" />
+                        <span>Xe: <b>{dispatch.plate || 'Chưa rõ'}</b></span>
+                      </span>
                     </div>
                   </div>
                   <div className="text-right sm:text-right text-left">
@@ -258,8 +264,9 @@ export default function M4CompanyDebtsSection({
                 </div>
 
                 {dispatch.status === 'completed' ? (
-                  <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-3.5 text-center font-bold">
-                    ✓ ĐÃ TẤT TOÁN CÔNG NỢ XƯỞNG GIẶT ĐỐI CHIẾU
+                  <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-3.5 text-center font-bold text-emerald-800 flex items-center justify-center gap-1.5 text-xs uppercase tracking-wide">
+                    <CheckCircle2 size={16} className="text-emerald-600" />
+                    <span>ĐÃ TẤT TOÁN CÔNG NỢ XƯỞNG GIẶT ĐỐI CHIẾU</span>
                   </div>
                 ) : (
                   <div className="bg-stone-50 border border-stone-200 rounded-xl p-3.5 space-y-3">
@@ -297,9 +304,10 @@ export default function M4CompanyDebtsSection({
                                   });
                                   handleHospitalVerifyM4DebtReturn(dispatch.id, verifyQtys);
                                 }}
-                                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold uppercase rounded-lg shadow-sm cursor-pointer font-bold"
+                                className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold uppercase rounded-lg shadow-sm cursor-pointer"
                               >
-                                Xác Nhận & Chốt Thu Hồi Nợ ✅
+                                <CheckCircle2 size={13} />
+                                <span>Xác Nhận & Chốt Thu Hồi Nợ</span>
                               </button>
                             </div>
                           </div>
@@ -348,9 +356,10 @@ export default function M4CompanyDebtsSection({
                                   });
                                   handleCompanySubmitM4DebtReturn(dispatch.id, repayQtys);
                                 }}
-                                className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-black uppercase rounded-lg shadow-sm cursor-pointer font-bold"
+                                className="flex items-center gap-1.5 px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-black uppercase rounded-lg shadow-sm cursor-pointer"
                               >
-                                Gửi Trả Sạch Nợ 🚀
+                                <Send size={13} />
+                                <span>Gửi Trả Sạch Nợ</span>
                               </button>
                             </div>
                           </div>
@@ -362,9 +371,10 @@ export default function M4CompanyDebtsSection({
                             {hasPerm('laundry') || effectiveIsLaundryUser ? (
                               <button
                                 onClick={() => setM4SelectedCompanyDebtId(dispatch.id)}
-                                className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-black uppercase rounded-lg shadow-sm cursor-pointer font-bold"
+                                className="flex items-center gap-1.5 px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-black uppercase rounded-lg shadow-sm cursor-pointer"
                               >
-                                🚀 Trả Nợ Sạch Nhanh
+                                <Send size={13} />
+                                <span>Trả Nợ Sạch Nhanh</span>
                               </button>
                             ) : (
                               <span className="text-[10px] text-stone-500 italic font-medium">Chờ xưởng trả sạch nợ</span>

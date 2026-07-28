@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { 
   FileText, Calendar, Filter, Download, Printer, TrendingUp, AlertTriangle, 
-  CheckCircle, ShieldAlert, Award, ArrowDownToLine, ArrowUpFromLine, RefreshCw, Layers
+  CheckCircle, ShieldAlert, Award, ArrowDownToLine, ArrowUpFromLine, RefreshCw, Layers,
+  FileSpreadsheet, Lightbulb, Trash2, BarChart3, Sparkles, CheckCircle2, AlertCircle, Check
 } from 'lucide-react';
 import { WardDeliverySlip, LaundryDispatch, LinenItem, HistoryItem } from '../types';
 import {
@@ -259,8 +260,8 @@ export default function ReportDashboardScreen({
             className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition-colors cursor-pointer"
             title="Xuất file Excel có trang trí đẹp, màu sắc cột dòng rõ ràng y hệt dashboard báo cáo"
           >
-            <Download size={13} />
-            <span>Xuất Excel Trực Quan 🎨</span>
+            <FileSpreadsheet size={14} />
+            <span>Xuất Excel Trực Quan</span>
           </button>
         </div>
       </div>
@@ -425,7 +426,9 @@ export default function ReportDashboardScreen({
           {hasSimulatedData && (
             <div className="bg-blue-50 border border-blue-200 text-blue-900 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 animate-fadeIn no-print">
               <div className="flex items-start gap-3">
-                <span className="text-2xl mt-0.5">💡</span>
+                <div className="p-2 bg-blue-100 text-blue-700 rounded-xl shrink-0 mt-0.5">
+                  <Lightbulb size={20} />
+                </div>
                 <div>
                   <h4 className="font-bold text-sm text-blue-950 uppercase tracking-wide">
                     Đang hiển thị Dữ liệu thử nghiệm / Giả lập
@@ -438,9 +441,10 @@ export default function ReportDashboardScreen({
               {onClearTestData && (
                 <button
                   onClick={onClearTestData}
-                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all shrink-0 cursor-pointer active:scale-95"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all shrink-0 cursor-pointer active:scale-95"
                 >
-                  🧹 Xóa dữ liệu thử nghiệm
+                  <Trash2 size={13} />
+                  <span>Xóa dữ liệu thử nghiệm</span>
                 </button>
               )}
             </div>
@@ -450,7 +454,9 @@ export default function ReportDashboardScreen({
           {isNoData && (
             <div className="bg-amber-50 border border-amber-200 text-amber-900 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 animate-fadeIn no-print">
               <div className="flex items-start gap-3">
-                <span className="text-2xl mt-0.5">📊</span>
+                <div className="p-2 bg-amber-100 text-amber-700 rounded-xl shrink-0 mt-0.5">
+                  <BarChart3 size={20} />
+                </div>
                 <div>
                   <h4 className="font-bold text-sm text-amber-950 uppercase tracking-wide">
                     Chưa có dữ liệu giao nhận đồ vải thực tế
@@ -463,9 +469,10 @@ export default function ReportDashboardScreen({
               {onGenerateTestData && (
                 <button
                   onClick={onGenerateTestData}
-                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all shrink-0 cursor-pointer active:scale-95"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all shrink-0 cursor-pointer active:scale-95"
                 >
-                  ⚡ Tạo Dữ Liệu Thử Nghiệm Báo Cáo
+                  <Sparkles size={13} />
+                  <span>Tạo Dữ Liệu Thử Nghiệm Báo Cáo</span>
                 </button>
               )}
             </div>
@@ -719,7 +726,9 @@ export default function ReportDashboardScreen({
 
               {inventoryData.alertItems.length === 0 ? (
                 <div className="h-72 flex flex-col items-center justify-center text-center space-y-2">
-                  <div className="text-3xl">🎉</div>
+                  <div className="p-3 bg-emerald-100 text-emerald-600 rounded-full">
+                    <CheckCircle2 size={28} />
+                  </div>
                   <h4 className="text-xs font-bold text-emerald-800 uppercase">Mức tồn kho an toàn tuyệt đối</h4>
                   <p className="text-[11px] text-stone-400 max-w-xs">Tất cả các sản phẩm đồ vải toàn viện đều đang ở mức tồn bằng hoặc cao hơn mức dự phòng tối thiểu.</p>
                 </div>
@@ -833,12 +842,12 @@ export default function ReportDashboardScreen({
                           )}
                           <td className="py-3.5 px-2 text-center">
                             {isAlert ? (
-                              <span className="bg-rose-50 text-rose-600 border border-rose-100 text-[10px] font-black px-2 py-0.5 rounded-full">
-                                ⚠️ Thiếu (Định mức: {item.minStock})
+                              <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-600 border border-rose-100 text-[10px] font-black px-2 py-0.5 rounded-full">
+                                <AlertTriangle size={11} /> Thiếu (Định mức: {item.minStock})
                               </span>
                             ) : (
-                              <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                ✓ Đủ (Định mức: {item.minStock})
+                              <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                <Check size={11} /> Đủ (Định mức: {item.minStock})
                               </span>
                             )}
                           </td>
