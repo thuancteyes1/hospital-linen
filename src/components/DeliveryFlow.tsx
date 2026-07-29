@@ -19,7 +19,7 @@ import {
   Inbox, 
   Layers, 
   RefreshCw,
-  Settings,
+  RotateCcw,
   Trash2,
   X,
   XCircle,
@@ -320,7 +320,7 @@ export default function DeliveryFlow({
               className="p-2 border border-stone-300 rounded-lg bg-white text-stone-600 hover:text-stone-900 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer shadow-3xs"
               title="Reset toàn bộ số lượng hàng tồn kho"
             >
-              <Settings size={14} />
+              <RotateCcw size={14} />
               Reset Kho
             </button>
             <button
@@ -445,7 +445,7 @@ export default function DeliveryFlow({
           <div className="bg-white border border-stone-300 w-full max-w-xl rounded-2xl shadow-2xl p-5 flex flex-col max-h-[85vh]">
             <div className="flex justify-between items-center pb-3 border-b border-stone-200 mb-4">
               <h3 className="text-sm font-black uppercase text-stone-800 tracking-tight font-bold flex items-center gap-2">
-                ⚙️ Cân chỉnh số lượng Kho Đồ Dơ Bệnh viện
+                Cân chỉnh số lượng Kho Đồ Dơ Bệnh viện
               </h3>
               <button onClick={() => setIsAdjustingDirtyStore(false)} className="text-stone-400 hover:text-stone-700 cursor-pointer">
                 <X size={16} />

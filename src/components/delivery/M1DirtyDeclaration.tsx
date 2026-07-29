@@ -15,7 +15,6 @@ import {
 import { 
   FileText, 
   Truck, 
-  Settings, 
   AlertCircle,
   Package 
 } from 'lucide-react';
@@ -156,11 +155,10 @@ export default function M1DirtyDeclaration({
                   {m1SubTab === 'dirty-ward' && (hasPerm('linen') || currentAccount?.isAdmin) && (
                     <button
                       onClick={() => setIsAdjustingDirtyStore(true)}
-                      className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-lg shadow-md flex items-center gap-1.5 transition-all cursor-pointer font-bold"
+                      className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-lg shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
                       title="Điều chỉnh số lượng đồ dơ tại Kho dơ tạm (do hao hụt, mất mát, đếm lệch)"
                     >
-                      <Settings size={14} />
-                      ⚙️ Cân chỉnh tồn dơ
+                      <span>Cân chỉnh tồn dơ</span>
                     </button>
                   )}
                 </div>

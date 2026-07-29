@@ -52,7 +52,7 @@ export default function AdjustDirtyStoreModal({
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-stone-200 p-6 flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center pb-3 border-b border-stone-200">
           <h3 className="font-serif font-black text-lg text-stone-800 flex items-center gap-2 font-bold">
-            ⚙️ Điều Chỉnh Tồn Kho Dơ Tạm
+            Điều Chỉnh Tồn Kho Dơ Tạm
           </h3>
           <button
             onClick={onClose}
