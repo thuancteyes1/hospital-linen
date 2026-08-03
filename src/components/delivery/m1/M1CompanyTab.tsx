@@ -585,9 +585,6 @@ export default function M1CompanyTab({
           <span className="text-xs font-black uppercase text-stone-800 tracking-wider block mb-2 font-bold">
             🔗 GOM PHIẾU & BÀN GIAO VỚI CÔNG TY
           </span>
-          <p className="text-[10px] text-stone-500 mb-3">
-            Danh sách các phiếu của khoa phòng đã duyệt bẩn dơ chờ cộng tổng thành 1 Bill Tổng bàn giao cho công ty giặt.
-          </p>
 
           <div className="space-y-2 max-h-[160px] overflow-y-auto border-b border-stone-200 pb-3 mb-3">
             {wardDeliverySlips.filter(s => s.status === 'verified_dirty').map(slip => (
@@ -842,9 +839,6 @@ export default function M1CompanyTab({
                     <ClipboardCheck className="w-4 h-4 text-amber-900 shrink-0" />
                     <span>BẢNG CHECKLIST ĐỐI CHIẾU KHO DƠ BV (LẦN 2)</span>
                   </span>
-                  <span className="text-[10px] text-stone-600 block">
-                    Checklist kiểm đếm thực tế đồ dơ đang gom tại kho trước khi bốc xếp lên xe.
-                  </span>
                 </div>
                 <div className="flex flex-wrap gap-1.5 shrink-0">
                   <button
@@ -951,12 +945,6 @@ export default function M1CompanyTab({
                                 <span className={`text-xs ${hasDelivery ? 'font-black text-stone-900' : 'font-medium text-stone-700'}`}>
                                   {item.ten}
                                 </span>
-                                {hasDelivery && (
-                                  <span className="px-1.5 py-0.2 text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 rounded shadow-2xs flex items-center gap-0.5">
-                                    <Truck className="w-2.5 h-2.5 shrink-0" />
-                                    <span>CÓ GIAO: {billQty || storeQty} CÁI</span>
-                                  </span>
-                                )}
                               </div>
                               <span className="text-[9px] text-stone-400 font-mono block mt-0.5">{item.ma}</span>
                               <div className="mt-1">
@@ -1039,10 +1027,7 @@ export default function M1CompanyTab({
 
             {/* Submit Actions */}
             {hasPerm('linen') ? (
-              <div className="bg-stone-50 border border-stone-300 rounded-lg p-3 flex flex-col sm:flex-row justify-between items-center gap-3">
-                <p className="text-[10px] text-stone-500 leading-normal">
-                  Lái xe nhận hàng bàn giao. Vui lòng đối chiếu thực tế tồn kho dơ và tích đủ checklist kiểm đếm ở trên trước khi bấm xác nhận xe rời đi.
-                </p>
+              <div className="bg-stone-50 border border-stone-300 rounded-lg p-3 flex justify-end items-center gap-3">
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"

@@ -6,7 +6,8 @@
 import React, { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { LinenItem, LINEN_GROUPS, LINEN_PAGES } from '../types';
-import { Search, Plus, FileSpreadsheet, Download, Edit, Trash2, MapPin, AlertTriangle, Eye, X } from 'lucide-react';
+import { handleImageError } from '../utils/imageUtils';
+import { Search, Plus, FileSpreadsheet, Download, Edit, Trash2, MapPin, AlertTriangle, Eye, X, Database } from 'lucide-react';
 import LinenStockStats from './inventory/LinenStockStats';
 import LinenStockAddModal from './inventory/LinenStockAddModal';
 import LinenStockEditModal from './inventory/LinenStockEditModal';
@@ -25,7 +26,11 @@ interface LinenStockSubscreenProps {
   onInitTest: () => void;
   onViewAllocations: (ma: string, ten: string) => void;
   onUpdateInventory?: (updatedItems: LinenItem[], updatedAllocations: Record<string, [string, number][]>) => void;
+  onExportBackup?: () => void;
+  onImportBackup?: (file: File) => void;
   isAdmin: boolean;
+  canExportReport?: boolean;
+  canSeeTrangBill?: boolean;
   departments: string[];
   userDept?: string;
   getLinenImage: (item: LinenItem) => string;
@@ -43,7 +48,11 @@ export default function LinenStockSubscreen({
   onInitTest,
   onViewAllocations,
   onUpdateInventory,
+  onExportBackup,
+  onImportBackup,
   isAdmin,
+  canExportReport = true,
+  canSeeTrangBill = true,
   departments,
   userDept,
   getLinenImage
@@ -316,7 +325,6 @@ export default function LinenStockSubscreen({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-black/10 p-5 rounded-2xl shadow-xs">
         <div>
           <h2 className="font-serif font-black text-2xl text-[#1A1A1A] tracking-tight">KHO ĐỒ VẢI QUY MÔ TOÀN VIỆN</h2>
-          <p className="text-xs text-[#8C8984] mt-1 font-medium"> Quản lý chi tiết danh mục mẫu, phân rã dòng tồn kho chính và phân bổ cho từng khoa phòng lâm sàng.</p>
         </div>
         <div className="flex flex-wrap gap-2.5">
           {isAdmin && (
@@ -337,13 +345,25 @@ export default function LinenStockSubscreen({
               </button>
             </>
           )}
-          <button
-            onClick={handleExportFullInventoryExcel}
-            className="px-4 py-2 border border-[#1A1A1A] hover:bg-[#EBE8E3] text-[#1A1A1A] text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer font-bold"
-          >
-            <Download size={14} />
-            <span>Xuất Báo Cáo Tồn</span>
-          </button>
+          {canExportReport && (
+            <button
+              onClick={handleExportFullInventoryExcel}
+              className="px-4 py-2 border border-[#1A1A1A] hover:bg-[#EBE8E3] text-[#1A1A1A] text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer font-bold"
+            >
+              <Download size={14} />
+              <span>Xuất Báo Cáo Tồn</span>
+            </button>
+          )}
+          {onExportBackup && isAdmin && (
+            <button
+              onClick={onExportBackup}
+              className="px-4 py-2 bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all rounded-lg shadow-xs cursor-pointer"
+              title="Xuất file sao lưu toàn bộ dữ liệu ứng dụng (.JSON)"
+            >
+              <Database size={14} />
+              <span>Xuất File Backup (.JSON)</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -375,16 +395,18 @@ export default function LinenStockSubscreen({
           ))}
         </select>
 
-        <select
-          value={selectedPage}
-          onChange={e => setSelectedPage(e.target.value)}
-          className="border border-amber-300 rounded-xl px-3 py-2 text-xs bg-amber-50/70 text-amber-950 font-bold focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all cursor-pointer"
-        >
-          <option value="">Tất cả Trang Bill Tổng</option>
-          {LINEN_PAGES.map(p => (
-            <option key={p} value={p}>{p}</option>
-          ))}
-        </select>
+        {canSeeTrangBill && (
+          <select
+            value={selectedPage}
+            onChange={e => setSelectedPage(e.target.value)}
+            className="border border-amber-300 rounded-xl px-3 py-2 text-xs bg-amber-50/70 text-amber-950 font-bold focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all cursor-pointer"
+          >
+            <option value="">Tất cả Trang Bill Tổng</option>
+            {LINEN_PAGES.map(p => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+        )}
 
         {(!isWardUser) ? (
           <select
@@ -413,7 +435,7 @@ export default function LinenStockSubscreen({
               <th className="py-3 px-4 cursor-pointer hover:bg-stone-200/50 transition-colors" onClick={() => handleSort('ma')}>Mã mặt hàng {sortCol === 'ma' && (sortAsc ? '▲' : '▼')}</th>
               <th className="py-3 px-4 cursor-pointer hover:bg-stone-200/50 transition-colors" onClick={() => handleSort('ten')}>Tên đồ vải {sortCol === 'ten' && (sortAsc ? '▲' : '▼')}</th>
               <th className="py-3 px-4 cursor-pointer hover:bg-stone-200/50 transition-colors" onClick={() => handleSort('nhom')}>Nhóm loại {sortCol === 'nhom' && (sortAsc ? '▲' : '▼')}</th>
-              <th className="py-3 px-4 cursor-pointer hover:bg-stone-200/50 transition-colors" onClick={() => handleSort('trang')}>Trang Bill {sortCol === 'trang' && (sortAsc ? '▲' : '▼')}</th>
+              {canSeeTrangBill && <th className="py-3 px-4 cursor-pointer hover:bg-stone-200/50 transition-colors" onClick={() => handleSort('trang')}>Trang Bill {sortCol === 'trang' && (sortAsc ? '▲' : '▼')}</th>}
               {!isWardUser && <th className="py-3 px-4 text-right cursor-pointer hover:bg-stone-200/50 transition-colors" onClick={() => handleSort('kc')}>Kho trung tâm {sortCol === 'kc' && (sortAsc ? '▲' : '▼')}</th>}
               {!isWardUser && <th className="py-3 px-4 text-right">Luân chuyển tạm</th>}
               <th className="py-3 px-4 text-right cursor-pointer hover:bg-stone-200/50 transition-colors" onClick={() => handleSort('kp')}>
@@ -427,7 +449,7 @@ export default function LinenStockSubscreen({
           <tbody className="divide-y divide-black/5 font-medium">
             {filteredAndSortedItems.length === 0 ? (
               <tr>
-                <td colSpan={isAdmin ? 10 : 9} className="py-12 text-center text-[#8C8984] italic">
+                <td colSpan={4 + (canSeeTrangBill ? 1 : 0) + (!isWardUser ? 4 : 0) + (isAdmin ? 1 : 0)} className="py-12 text-center text-[#8C8984] italic">
                   Không tìm thấy mặt hàng nào trùng khớp với bộ lọc hiện tại.
                 </td>
               </tr>
@@ -446,6 +468,7 @@ export default function LinenStockSubscreen({
                           alt={d.ten}
                           className="w-full h-full object-cover group-hover/thumb:scale-110 transition-transform duration-300"
                           referrerPolicy="no-referrer"
+                          onError={(e) => handleImageError(e, d)}
                         />
                         <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center text-white">
                           <Eye size={12} />
@@ -460,25 +483,27 @@ export default function LinenStockSubscreen({
                     </div>
                   </td>
                   <td className="py-2.5 px-4 text-[#8C8984] text-[11px]">{d.nhom}</td>
-                  <td className="py-2.5 px-4">
-                    {isAdmin ? (
-                      <select
-                        value={d.trang || 'Trang 1'}
-                        onChange={(e) => {
-                          onEditItem(d.ma, { ...d, trang: e.target.value });
-                        }}
-                        className="bg-amber-100/90 hover:bg-amber-200/90 text-amber-950 border border-amber-300 text-[11px] font-bold rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer shadow-2xs transition-all"
-                      >
-                        {LINEN_PAGES.map(p => (
-                          <option key={p} value={p}>{p}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[11px] font-bold border border-amber-300 shadow-2xs">
-                        {d.trang || 'Trang 1'}
-                      </span>
-                    )}
-                  </td>
+                  {canSeeTrangBill && (
+                    <td className="py-2.5 px-4">
+                      {isAdmin ? (
+                        <select
+                          value={d.trang || 'Trang 1'}
+                          onChange={(e) => {
+                            onEditItem(d.ma, { ...d, trang: e.target.value });
+                          }}
+                          className="bg-amber-100/90 hover:bg-amber-200/90 text-amber-950 border border-amber-300 text-[11px] font-bold rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer shadow-2xs transition-all"
+                        >
+                          {LINEN_PAGES.map(p => (
+                            <option key={p} value={p}>{p}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[11px] font-bold border border-amber-300 shadow-2xs">
+                          {d.trang || 'Trang 1'}
+                        </span>
+                      )}
+                    </td>
+                  )}
                   {!isWardUser && <td className="py-2.5 px-4 text-right font-mono font-medium">{d.kc.toLocaleString()}</td>}
                   {!isWardUser && (
                     <td className="py-2.5 px-4 text-right">
@@ -602,7 +627,7 @@ export default function LinenStockSubscreen({
 
                 <div className="flex items-center gap-3">
                   <div onClick={() => setSelectedDetailItem(d)} className="relative w-12 h-12 rounded-lg overflow-hidden border border-black/10 bg-stone-100 flex-shrink-0 cursor-zoom-in">
-                    <img src={getLinenImage(d)} alt={d.ten} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <img src={getLinenImage(d)} alt={d.ten} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => handleImageError(e, d)} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 onClick={() => setSelectedDetailItem(d)} className="font-bold text-stone-900 text-sm hover:text-blue-600 cursor-pointer">{d.ten}</h4>

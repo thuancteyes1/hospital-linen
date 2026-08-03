@@ -710,11 +710,6 @@ export default function M2CompanyClean({
                                 <td className="p-2.5">
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     <span className={`text-xs ${hasDelivery ? 'font-black text-stone-900' : 'font-medium text-stone-700'}`}>{item.ten}</span>
-                                    {hasDelivery && (
-                                      <span className="px-1.5 py-0.2 text-[9px] font-black bg-indigo-100 text-indigo-900 border border-indigo-300 rounded shadow-2xs">
-                                        <Truck className="w-2.5 h-2.5 shrink-0 inline-block mr-0.5" /> CÓ GIAO: {activeDeliveryQty} CÁI
-                                      </span>
-                                    )}
                                   </div>
                                   <span className="text-[9px] text-stone-400 font-mono block mt-0.5">{item.ma}</span>
                                 </td>
@@ -811,9 +806,6 @@ export default function M2CompanyClean({
                       </p>
                       <span className="text-[9px] bg-indigo-200 text-indigo-900 font-bold px-2 py-0.5 rounded">Xưởng giặt khai báo</span>
                     </div>
-                    <p className="text-[10px] text-stone-600">
-                      Nhập số lượng sạch trả về cho bệnh viện. Sau khi gửi, <b>Nhân viên đồ sạch Bệnh Viện sẽ kiểm đếm thực tế và xác nhận</b>. Nếu có phát sinh nợ, hệ thống sẽ tự động tách thành 1 Phiếu Nợ riêng biệt.
-                    </p>
                     <div className="flex justify-end pt-2">
                       <button
                         onClick={() => handleCompanySubmitM2Return(activeDispatch.id)}

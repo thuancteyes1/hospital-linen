@@ -203,6 +203,34 @@ export function useAuth(
     return false;
   }, [currentAccount, simulatedRole, isCurrentlyAdmin, isWardUser, isHousekeepingUser, isLaundryUser, users, currentRoleName]);
 
+  const canSeeTrangBill = useMemo(() => {
+    if (!currentAccount) return false;
+
+    if (simulatedRole === 'admin' || simulatedRole === 'linen') {
+      return true;
+    }
+    if (simulatedRole === 'clean' || simulatedRole === 'ward' || simulatedRole === 'orderly' || simulatedRole === 'housekeeping' || simulatedRole === 'laundry') {
+      return false;
+    }
+
+    if (isCurrentlyAdmin || currentAccount.isAdmin) return true;
+    if (isWardUser || isHousekeepingUser || isLaundryUser) return false;
+
+    const u = users[currentAccount.userIdx] || users.find(x => x.email === currentAccount.email);
+    const roleIdx = u ? u.role : undefined;
+    if (roleIdx === 0 || roleIdx === 1) return true;
+
+    const roleLower = (currentRoleName || '').toLowerCase();
+    if (roleLower.includes('admin') ||
+        roleLower.includes('quản trị') ||
+        roleLower.includes('trưởng kho') ||
+        roleLower.includes('thủ kho')) {
+      return true;
+    }
+
+    return false;
+  }, [currentAccount, simulatedRole, isCurrentlyAdmin, isWardUser, isHousekeepingUser, isLaundryUser, users, currentRoleName]);
+
   return {
     currentAccount,
     setCurrentAccount,
@@ -220,6 +248,7 @@ export function useAuth(
     isWardUser,
     isHousekeepingUser,
     isCurrentlyAdmin,
-    canSeeReport
+    canSeeReport,
+    canSeeTrangBill
   };
 }

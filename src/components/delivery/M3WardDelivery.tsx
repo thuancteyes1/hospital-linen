@@ -727,11 +727,6 @@ export default function M3WardDelivery({
                                 <td className="p-2.5">
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     <span className={`text-xs ${hasDelivery ? 'font-black text-stone-900' : 'font-medium text-stone-700'}`}>{item.ten}</span>
-                                    {hasDelivery && (
-                                      <span className="px-1.5 py-0.2 text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 rounded shadow-2xs">
-                                        <Truck className="w-2.5 h-2.5 shrink-0 inline-block mr-0.5 text-emerald-800" /> CÓ GIAO: {activeQty} CÁI
-                                      </span>
-                                    )}
                                   </div>
                                   <span className="text-[9px] text-stone-400 font-mono block mt-0.5">{item.ma}</span>
                                 </td>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, Trash2 } from 'lucide-react';
 import { LinenItem, LINEN_GROUPS, LINEN_PAGES } from '../../types';
+import { compressImageFile, handleImageError } from '../../utils/imageUtils';
 
 interface LinenStockAddModalProps {
   onClose: () => void;
@@ -20,14 +21,15 @@ export default function LinenStockAddModal({ onClose, onSubmit, items }: LinenSt
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        setAddHinhAnh(dataUrl);
+    compressImageFile(
+      file,
+      (compressedUrl) => {
+        setAddHinhAnh(compressedUrl);
+      },
+      (err) => {
+        setAddError(err || 'Không thể đọc tệp ảnh.');
       }
-    };
-    reader.readAsDataURL(file);
+    );
     e.target.value = '';
   };
 

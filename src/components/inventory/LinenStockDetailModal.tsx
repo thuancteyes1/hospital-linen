@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { MapPin, X, Upload, Trash2 } from 'lucide-react';
+import { MapPin, X, Upload, Trash2, AlertCircle } from 'lucide-react';
 import { LinenItem } from '../../types';
+import { compressImageFile, handleImageError, sanitizeImageUrl } from '../../utils/imageUtils';
 
 interface LinenStockDetailModalProps {
   onClose: () => void;
@@ -28,23 +29,29 @@ export default function LinenStockDetailModal({
   onEditItem,
   onSetSelectedDetailItem
 }: LinenStockDetailModalProps) {
+  const [uploadError, setUploadError] = useState('');
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        const updated = { ...selectedDetailItem, hinhAnh: dataUrl };
+    setUploadError('');
+
+    compressImageFile(
+      file,
+      (compressedUrl) => {
+        const updated = { ...selectedDetailItem, hinhAnh: compressedUrl };
         onEditItem(selectedDetailItem.ma, updated);
         onSetSelectedDetailItem(updated);
+      },
+      (err) => {
+        setUploadError(err || 'Không thể tải ảnh này.');
       }
-    };
-    reader.readAsDataURL(file);
+    );
     e.target.value = '';
   };
 
   const handleRemoveImage = () => {
+    setUploadError('');
     const updated = { ...selectedDetailItem, hinhAnh: undefined };
     onEditItem(selectedDetailItem.ma, updated);
     onSetSelectedDetailItem(updated);
@@ -68,9 +75,21 @@ export default function LinenStockDetailModal({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <div className="relative aspect-square w-full rounded-xl overflow-hidden border border-[#1A1A1A] bg-stone-100 shadow-inner">
-                <img src={getLinenImage(selectedDetailItem)} alt={selectedDetailItem.ten} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <div className="relative aspect-square w-full rounded-xl overflow-hidden border border-[#1A1A1A] bg-stone-100 shadow-inner flex items-center justify-center">
+                <img 
+                  src={getLinenImage(selectedDetailItem)} 
+                  alt={selectedDetailItem.ten} 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer"
+                  onError={(e) => handleImageError(e, selectedDetailItem)}
+                />
               </div>
+              {uploadError && (
+                <div className="p-2 border border-rose-300 bg-rose-50 text-[11px] text-rose-700 rounded flex items-center gap-1.5 font-semibold">
+                  <AlertCircle size={14} className="shrink-0" />
+                  <span>{uploadError}</span>
+                </div>
+              )}
               {!isWardUser && (
                 <div className="pt-2 flex flex-col gap-2">
                   <input
@@ -85,13 +104,50 @@ export default function LinenStockDetailModal({
                     className="w-full py-2 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wider rounded cursor-pointer transition-all flex items-center justify-center gap-2 shadow-xs"
                   >
                     <Upload className="w-4 h-4" />
-                    <span>Tải ảnh từ tệp (JPG, PNG)</span>
+                    <span>Tải ảnh từ máy (JPG, PNG)</span>
                   </label>
+
+                  <div className="pt-1">
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const form = e.currentTarget;
+                        const input = form.elements.namedItem('imageUrlInput') as HTMLInputElement;
+                        if (input && input.value.trim()) {
+                          const sanitized = sanitizeImageUrl(input.value.trim());
+                          if (sanitized) {
+                            const updated = { ...selectedDetailItem, hinhAnh: sanitized };
+                            onEditItem(selectedDetailItem.ma, updated);
+                            onSetSelectedDetailItem(updated);
+                            setUploadError('');
+                            input.value = '';
+                          } else {
+                            setUploadError('Link ảnh không hợp lệ (hỗ trợ HTTP, HTTPS hoặc link Google Drive).');
+                          }
+                        }
+                      }}
+                      className="flex gap-1.5"
+                    >
+                      <input
+                        name="imageUrlInput"
+                        type="text"
+                        placeholder="Dán link ảnh hoặc link Google Drive..."
+                        className="flex-1 px-2.5 py-1.5 text-xs border border-stone-300 rounded bg-white text-stone-800 placeholder:text-stone-400 focus:outline-none focus:border-blue-500"
+                      />
+                      <button
+                        type="submit"
+                        className="px-3 py-1.5 bg-stone-800 hover:bg-black text-white text-xs font-bold rounded cursor-pointer transition-all shrink-0"
+                      >
+                        Lưu Link
+                      </button>
+                    </form>
+                  </div>
+
                   {selectedDetailItem.hinhAnh && (
                     <button
                       type="button"
                       onClick={handleRemoveImage}
-                      className="w-full py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-bold uppercase rounded cursor-pointer transition-all flex items-center justify-center gap-1.5"
+                      className="w-full py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-bold uppercase rounded cursor-pointer transition-all flex items-center justify-center gap-1.5 mt-1"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Xóa ảnh hiện tại</span>

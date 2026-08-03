@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { Upload, FileUp, X, Check, Download, AlertTriangle, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { LinenItem, LINEN_GROUPS } from '../../types';
+import { sanitizeImageUrl } from '../../utils/imageUtils';
 
 interface LinenStockExcelImportModalProps {
   onClose: () => void;
@@ -76,6 +77,7 @@ export default function LinenStockExcelImportModal({ onClose, onConfirm, departm
         let colMa = -1;
         let colTen = -1;
         let colNhom = -1;
+        let colTrang = -1;
         let colKC = -1;
         let colHinhAnh = -1;
         let colDept = -1;
@@ -84,15 +86,17 @@ export default function LinenStockExcelImportModal({ onClose, onConfirm, departm
 
         headers.forEach((header, idx) => {
           const norm = normalizeStr(header);
-          if (colMa === -1 && (norm === 'ma' || norm === 'madv' || norm === 'mavattu' || norm === 'madovai' || norm === 'code' || norm === 'mahang' || norm === 'kyhieu')) {
+          if (colMa === -1 && (norm === 'ma' || norm === 'madv' || norm === 'mavattu' || norm === 'madovai' || norm === 'code' || norm === 'mahang' || norm === 'mamathang' || norm === 'kyhieu')) {
             colMa = idx;
           } else if (colTen === -1 && (norm === 'ten' || norm === 'tendovai' || norm === 'tenvattu' || norm === 'name' || norm === 'tenhang' || norm === 'mota')) {
             colTen = idx;
-          } else if (colNhom === -1 && (norm === 'nhom' || norm === 'loai' || norm === 'group' || norm === 'category')) {
+          } else if (colNhom === -1 && (norm === 'nhom' || norm === 'nhomloai' || norm === 'loai' || norm === 'group' || norm === 'category')) {
             colNhom = idx;
-          } else if (colKC === -1 && (norm === 'khochinh' || norm === 'khotrungtam' || norm === 'tonkhochinh' || norm === 'main' || norm === 'mainstock' || norm === 'kc' || norm === 'khodovai')) {
+          } else if (colTrang === -1 && (norm === 'trang' || norm === 'trangbill' || norm === 'page' || norm === 'trangbilltong')) {
+            colTrang = idx;
+          } else if (colKC === -1 && (norm === 'khochinh' || norm === 'khotrungtam' || norm === 'tonkhochinh' || norm === 'tontrungtam' || norm === 'main' || norm === 'mainstock' || norm === 'kc' || norm === 'khodovai')) {
             colKC = idx;
-          } else if (colHinhAnh === -1 && (norm.includes('hinhanh') || norm.includes('linkanh') || norm.includes('url') || norm.includes('image') || norm.includes('picture') || norm === 'anh' || norm === 'photo')) {
+          } else if (colHinhAnh === -1 && (norm.includes('hinhanh') || norm.includes('linkanh') || norm.includes('url') || norm.includes('image') || norm.includes('picture') || norm === 'anh' || norm === 'photo' || norm === 'hinh')) {
             colHinhAnh = idx;
           } else if (colDept === -1 && (norm === 'khoaphong' || norm === 'khoa' || norm === 'bophan' || norm === 'dept' || norm === 'department')) {
             colDept = idx;
@@ -123,9 +127,11 @@ export default function LinenStockExcelImportModal({ onClose, onConfirm, departm
           let ma = colMa !== -1 && row[colMa] !== undefined && row[colMa] !== null ? String(row[colMa]).trim() : '';
           let ten = colTen !== -1 && row[colTen] !== undefined && row[colTen] !== null ? String(row[colTen]).trim() : '';
           let nhom = colNhom !== -1 && row[colNhom] !== undefined && row[colNhom] !== null ? String(row[colNhom]).trim() : 'Khác';
+          let trangRaw = colTrang !== -1 && row[colTrang] !== undefined && row[colTrang] !== null ? String(row[colTrang]).trim() : '';
           let kc = colKC !== -1 && row[colKC] !== undefined ? Number(row[colKC]) : 0;
           if (isNaN(kc)) kc = 0;
-          let hinhAnh = colHinhAnh !== -1 && row[colHinhAnh] !== undefined && row[colHinhAnh] !== null ? String(row[colHinhAnh]).trim() : '';
+          let hinhAnhRaw = colHinhAnh !== -1 && row[colHinhAnh] !== undefined && row[colHinhAnh] !== null ? String(row[colHinhAnh]).trim() : '';
+          let hinhAnh = sanitizeImageUrl(hinhAnhRaw);
 
           if (!ma && !ten) continue;
           if (!ma) {
@@ -137,14 +143,19 @@ export default function LinenStockExcelImportModal({ onClose, onConfirm, departm
             nhom = matchedGroup || 'Khác';
           }
 
+          let trang = trangRaw ? (trangRaw.toLowerCase().startsWith('trang') ? trangRaw : `Trang ${trangRaw}`) : undefined;
+
           let item = parsedItemsMap.get(ma);
           if (!item) {
-            item = { ma, ten, nhom, kc, kp: 0, mn: 5, hinhAnh: hinhAnh || undefined };
+            item = { ma, ten, nhom, kc, kp: 0, mn: 5, hinhAnh: hinhAnh || undefined, trang };
             parsedItemsMap.set(ma, item);
           } else {
             item.kc += kc;
             if (hinhAnh && !item.hinhAnh) {
               item.hinhAnh = hinhAnh;
+            }
+            if (trang && !item.trang) {
+              item.trang = trang;
             }
           }
 
@@ -209,79 +220,91 @@ export default function LinenStockExcelImportModal({ onClose, onConfirm, departm
   const handleDownloadTemplate = () => {
     const sampleData = [
       {
-        'Mã đồ vải': 'DV001',
+        'Mã mặt hàng': 'DV001',
         'Tên đồ vải': 'GA TRẢI GIƯỜNG CÓ THUN (1.2m x 2.0m)',
-        'Nhóm': 'Drap / Ga giường',
-        'Tồn kho chính': 250,
+        'Nhóm loại': 'Drap / Ga giường',
+        'Trang': 'Trang 1',
+        'Tồn trung tâm': 250,
         'Hình ảnh': 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=600&q=80',
+        'NICU': 15,
         'Khoa Cấp cứu': 30,
         'Khoa Khám bệnh': 20,
-        'Khoa Nội tổng hợp': 25,
-        'Khoa Ngoại tổng hợp': 15
+        'Khoa Gây mê hồi sức': 25,
+        'Khoa Nội tổng hợp': 15
       },
       {
-        'Mã đồ vải': 'DV002',
+        'Mã mặt hàng': 'DV002',
         'Tên đồ vải': 'ÁO CHOÀNG PHÒNG MỔ PTV XANH DƯƠNG',
-        'Nhóm': 'Trang phục y tế',
-        'Tồn kho chính': 120,
+        'Nhóm loại': 'Trang phục y tế',
+        'Trang': 'Trang 1',
+        'Tồn trung tâm': 120,
         'Hình ảnh': 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&w=600&q=80',
+        'NICU': 10,
         'Khoa Cấp cứu': 15,
-        'Khoa Phẫu thuật - GMHS': 50,
-        'Khoa Nội tổng hợp': 0,
-        'Khoa Ngoại tổng hợp': 10
+        'Khoa Khám bệnh': 0,
+        'Khoa Gây mê hồi sức': 50,
+        'Khoa Nội tổng hợp': 10
       },
       {
-        'Mã đồ vải': 'DV003',
+        'Mã mặt hàng': 'DV003',
         'Tên đồ vải': 'KHĂN TẮM BỆNH NHÂN BÔNG TRẮNG',
-        'Nhóm': 'Khăn các loại',
-        'Tồn kho chính': 300,
+        'Nhóm loại': 'Khăn các loại',
+        'Trang': 'Trang 2',
+        'Tồn trung tâm': 300,
         'Hình ảnh': 'https://images.unsplash.com/photo-1546554137-f86b9593a222?auto=format&fit=crop&w=600&q=80',
+        'NICU': 20,
         'Khoa Cấp cứu': 40,
         'Khoa Khám bệnh': 30,
-        'Khoa Nội tổng hợp': 50,
-        'Khoa Ngoại tổng hợp': 35
+        'Khoa Gây mê hồi sức': 50,
+        'Khoa Nội tổng hợp': 35
       },
       {
-        'Mã đồ vải': 'DV004',
+        'Mã mặt hàng': 'DV004',
         'Tên đồ vải': 'VỎ CHĂN ĐƠN BỆNH VIỆN XANH CỐM',
-        'Nhóm': 'Chăn / Màn / Vỏ gối',
-        'Tồn kho chính': 180,
+        'Nhóm loại': 'Chăn / Màn / Vỏ gối',
+        'Trang': 'Trang 2',
+        'Tồn trung tâm': 180,
         'Hình ảnh': 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=600&q=80',
+        'NICU': 5,
         'Khoa Cấp cứu': 20,
         'Khoa Khám bệnh': 10,
-        'Khoa Nội tổng hợp': 30,
-        'Khoa Ngoại tổng hợp': 20
+        'Khoa Gây mê hồi sức': 30,
+        'Khoa Nội tổng hợp': 20
       },
       {
-        'Mã đồ vải': 'DV005',
+        'Mã mặt hàng': 'DV005',
         'Tên đồ vải': 'ÁO BỆNH NHÂN NAM/NỮ KẺ SỌC',
-        'Nhóm': 'Trang phục y tế',
-        'Tồn kho chính': 220,
+        'Nhóm loại': 'Trang phục y tế',
+        'Trang': 'Trang 3',
+        'Tồn trung tâm': 220,
         'Hình ảnh': 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80',
+        'NICU': 15,
         'Khoa Cấp cứu': 25,
         'Khoa Khám bệnh': 35,
-        'Khoa Nội tổng hợp': 40,
-        'Khoa Ngoại tổng hợp': 30
+        'Khoa Gây mê hồi sức': 40,
+        'Khoa Nội tổng hợp': 30
       },
       {
-        'Mã đồ vải': 'DV006',
+        'Mã mặt hàng': 'DV006',
         'Tên đồ vải': 'TẤM LÓT CHỐNG THẤM PHÒNG CẤP CỨU',
-        'Nhóm': 'Đồ vải đặc chủng',
-        'Tồn kho chính': 100,
+        'Nhóm loại': 'Đồ vải đặc chủng',
+        'Trang': 'Trang 4',
+        'Tồn trung tâm': 100,
         'Hình ảnh': 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80',
+        'NICU': 10,
         'Khoa Cấp cứu': 30,
         'Khoa Khám bệnh': 5,
-        'Khoa Nội tổng hợp': 10,
-        'Khoa Ngoại tổng hợp': 15
+        'Khoa Gây mê hồi sức': 10,
+        'Khoa Nội tổng hợp': 15
       }
     ];
 
     const instructionsData = [
       {
         'STT': 1,
-        'Tên Cột': 'Mã đồ vải',
+        'Tên Cột': 'Mã mặt hàng',
         'Bắt Buộc': 'BẮT BUỘC',
-        'Mô Tả & Quy Định': 'Mã định danh duy nhất của sản phẩm đồ vải (Ví dụ: DV001, DV002). Nếu mã đã tồn tại, hệ thống sẽ cập nhật thông tin sản phẩm đó.'
+        'Mô Tả & Quy Định': 'Mã định danh duy nhất của sản phẩm đồ vải (Ví dụ: DV001, DV002). Cột này giúp hệ thống cập nhật đúng mặt hàng.'
       },
       {
         'STT': 2,
@@ -291,27 +314,33 @@ export default function LinenStockExcelImportModal({ onClose, onConfirm, departm
       },
       {
         'STT': 3,
-        'Tên Cột': 'Nhóm',
+        'Tên Cột': 'Nhóm loại',
         'Bắt Buộc': 'Khuyến khích',
         'Mô Tả & Quy Định': 'Các nhóm chuẩn: "Drap / Ga giường", "Trang phục y tế", "Khăn các loại", "Chăn / Màn / Vỏ gối", "Đồ vải đặc chủng", hoặc nhóm tự định nghĩa.'
       },
       {
         'STT': 4,
-        'Tên Cột': 'Tồn kho chính',
+        'Tên Cột': 'Trang',
+        'Bắt Buộc': 'Tùy chọn',
+        'Mô Tả & Quy Định': 'Trang in trên Bill tổng (Ví dụ: Trang 1, Trang 2, Trang 3, Trang 4...). Giúp lọc và sắp xếp khi in phiếu.'
+      },
+      {
+        'STT': 5,
+        'Tên Cột': 'Tồn trung tâm',
         'Bắt Buộc': 'Khuyến khích',
         'Mô Tả & Quy Định': 'Số lượng đồ vải sạch hiện có tại Kho trung tâm / Kho đồ vải bệnh viện (Điền số nguyên >= 0).'
       },
       {
-        'STT': 5,
+        'STT': 6,
         'Tên Cột': 'Hình ảnh',
         'Bắt Buộc': 'Tùy chọn',
-        'Mô Tả & Quy Định': 'Đường dẫn URL ảnh trực tuyến (https://...). Hệ thống sẽ hiển thị hình ảnh đại diện trực quan trên danh mục và khi tạo phiếu.'
+        'Mô Tả & Quy Định': 'Đường dẫn URL ảnh trực tuyến (https://... dạng .jpg, .png hoặc link ảnh công khai). Hệ thống sẽ hiển thị hình ảnh đại diện trực quan.'
       },
       {
-        'STT': 6,
+        'STT': 7,
         'Tên Cột': '[Tên Khoa Phòng]',
         'Bắt Buộc': 'Tùy chọn',
-        'Mô Tả & Quy Định': 'Các cột tiếp theo đặt tên đúng theo Tên Khoa/Phòng (VD: Khoa Cấp cứu, Khoa Nội tổng hợp...). Giá trị ô là số lượng đồ vải phân bổ ban đầu tại khoa đó.'
+        'Mô Tả & Quy Định': 'Các cột tiếp theo đặt tên đúng theo Tên Khoa/Phòng (VD: NICU, Khoa Cấp cứu, Khoa Nội tổng hợp...). Giá trị ô là số lượng đồ vải tồn kho hiện tại ở khoa đó.'
       }
     ];
 
@@ -321,12 +350,14 @@ export default function LinenStockExcelImportModal({ onClose, onConfirm, departm
       { wch: 14 }, // Ma
       { wch: 38 }, // Ten
       { wch: 22 }, // Nhom
-      { wch: 16 }, // Ton kho chinh
+      { wch: 12 }, // Trang
+      { wch: 16 }, // Ton trung tam
       { wch: 65 }, // Hinh anh
+      { wch: 12 }, // NICU
       { wch: 18 }, // Khoa Cap cuu
       { wch: 18 }, // Khoa Kham benh
-      { wch: 22 }, // Khoa Noi
-      { wch: 22 }  // Khoa Ngoai
+      { wch: 22 }, // Khoa GMHS
+      { wch: 22 }  // Khoa Noi
     ];
 
     // Sheet 2: Huong dan

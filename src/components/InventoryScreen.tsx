@@ -6,33 +6,9 @@
 import React from 'react';
 import { LinenItem, DEPARTMENTS } from '../types';
 import LinenStockSubscreen from './LinenStockSubscreen';
+import { getLinenImage, getDefaultLinenImage, handleImageError, sanitizeImageUrl } from '../utils/imageUtils';
 
-export function getLinenImage(item: LinenItem): string {
-  if (item.hinhAnh && (item.hinhAnh.trim().startsWith('http') || item.hinhAnh.trim().startsWith('data:image/'))) {
-    return item.hinhAnh;
-  }
-  
-  const name = (item.ten || '').toLowerCase();
-  const group = (item.nhom || '').toLowerCase();
-  
-  if (name.includes('phòng mổ') || name.includes('ptv') || name.includes('áo choàng') || name.includes('đồng phục') || name.includes('blouse') || name.includes('đầm') || name.includes('váy') || name.includes('quần') || group.includes('trang phục')) {
-    return 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&w=600&q=80';
-  }
-  if (name.includes('gối') || name.includes('mền') || name.includes('ruột') || group.includes('mền')) {
-    return 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=600&q=80';
-  }
-  if (name.includes('khăn') || group.includes('khăn')) {
-    return 'https://images.unsplash.com/photo-1546554137-f86b9593a222?auto=format&fit=crop&w=600&q=80';
-  }
-  if (name.includes('drap') || name.includes('săng') || name.includes('sheet') || group.includes('drap') || group.includes('săng') || group.includes('sheet')) {
-    return 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=600&q=80';
-  }
-  if (name.includes('túi') || group.includes('túi')) {
-    return 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80';
-  }
-  
-  return 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80';
-}
+export { getLinenImage, getDefaultLinenImage, handleImageError, sanitizeImageUrl };
 
 interface InventoryScreenProps {
   items: LinenItem[];
@@ -49,6 +25,8 @@ interface InventoryScreenProps {
   onViewAllocations: (ma: string, ten: string) => void;
   onUpdateInventory?: (updatedItems: LinenItem[], updatedAllocations: Record<string, [string, number][]>) => void;
   isAdmin: boolean;
+  canExportReport?: boolean;
+  canSeeTrangBill?: boolean;
   departments?: string[];
   userDept?: string;
 }
@@ -68,6 +46,8 @@ export default function InventoryScreen({
   onViewAllocations,
   onUpdateInventory,
   isAdmin,
+  canExportReport = true,
+  canSeeTrangBill = true,
   departments = DEPARTMENTS,
   userDept
 }: InventoryScreenProps) {
@@ -85,7 +65,11 @@ export default function InventoryScreen({
         onInitTest={onInitTest}
         onViewAllocations={onViewAllocations}
         onUpdateInventory={onUpdateInventory}
+        onExportBackup={onExportBackup}
+        onImportBackup={onImportBackup}
         isAdmin={isAdmin}
+        canExportReport={canExportReport}
+        canSeeTrangBill={canSeeTrangBill}
         departments={departments}
         userDept={userDept}
         getLinenImage={getLinenImage}

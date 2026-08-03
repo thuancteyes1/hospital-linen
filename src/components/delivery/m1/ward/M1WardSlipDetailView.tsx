@@ -233,10 +233,7 @@ export default function M1WardSlipDetailView({
 
       {/* Confirm Slip as Dirty Block */}
       {activeSlip.status === 'pending' && hasPerm('linen') && (
-        <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 flex justify-between items-center gap-3">
-          <p className="text-[11px] text-stone-600">
-            Hãy đối chiếu thực tế, chỉnh sửa lại số lượng nếu có lệch số dơ và bấm xác nhận để đồ dơ đi vào <strong>Kho dơ BV</strong>.
-          </p>
+        <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 flex justify-end items-center">
           <button
             onClick={() => handleConfirmDirtyLinenM1(activeSlip.id)}
             disabled={isConfirmingM1}

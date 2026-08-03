@@ -81,11 +81,24 @@ export default function TransactionForm({
   }, [currentUserRecord, currentAccount, departments]);
 
   const isRestricted = useMemo(() => {
-    if (userDeptMatch) return true;
-    if (!currentUserRecord) return false;
-    const dept = currentUserRecord.dept;
-    return dept && dept !== 'Tất cả' && dept !== 'Tất cả (Không giới hạn)' && dept !== 'Kho trung tâm';
-  }, [currentUserRecord, userDeptMatch]);
+    const username = currentAccount?.username || '';
+    const nameLower = (currentAccount?.name || '').toLowerCase();
+    const roleNameLower = (currentUserRecord && currentUserRecord.roleName ? currentUserRecord.roleName : '').toLowerCase();
+    const isSimulatedWardUser = username === 'sim.hl' || username === 'sim.dd' || username === 'lan.hl' || username === 'tai.hl' || username === 'hoa.dd' || username === 'ngoc.dd' || username === 'mai.dd';
+
+    const isFullStoreManager = 
+      (currentAccount?.isAdmin && !isSimulatedWardUser) ||
+      username === 'sim.clean' || username === 'sim.tk' || username === 'an.nv' || username === 'minh.nv' ||
+      roleNameLower.includes('quản trị') || roleNameLower.includes('trưởng kho') || roleNameLower.includes('thủ kho') || roleNameLower.includes('đồ vải') ||
+      nameLower.includes('quản trị') || nameLower.includes('trưởng kho') || nameLower.includes('thủ kho') || nameLower.includes('nhân viên đồ vải');
+
+    if (isFullStoreManager) {
+      return false;
+    }
+
+    if (!userDeptMatch) return false;
+    return userDeptMatch !== 'Tất cả' && userDeptMatch !== 'Tất cả (Không giới hạn)' && userDeptMatch !== 'Kho trung tâm';
+  }, [currentAccount, currentUserRecord, userDeptMatch]);
 
   // 1) Helper: Live Stock lookup for any item at selected source location
   const getLiveStock = (ma: string): { label: string; qty: number } => {
@@ -379,11 +392,11 @@ export default function TransactionForm({
                 <select
                   value={toDept}
                   onChange={e => setToDept(e.target.value)}
-                  disabled={isRestricted && !!userDeptMatch}
+                  disabled={isRestricted && txType !== 'xuat' && !!userDeptMatch}
                   className="w-full bg-[#EBE8E3] border border-[#1A1A1A] p-2 text-xs focus:outline-none disabled:opacity-80 disabled:bg-[#E0DDD7] font-semibold"
                 >
-                  {(!isRestricted || !userDeptMatch) && <option value="">-- Chọn khoa phòng nhận --</option>}
-                  {(isRestricted && userDeptMatch ? [userDeptMatch] : departments.filter(d => d !== 'Kho trung tâm')).map(d => (
+                  {(!isRestricted || txType === 'xuat' || !userDeptMatch) && <option value="">-- Chọn khoa phòng nhận --</option>}
+                  {(isRestricted && txType !== 'xuat' && userDeptMatch ? [userDeptMatch] : departments.filter(d => d !== 'Kho trung tâm')).map(d => (
                     <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
@@ -445,9 +458,9 @@ export default function TransactionForm({
                           <option value="">-- Chọn mặt hàng --</option>
                         )}
                         {availableItems.map(it => {
-                          const itemStock = (txType === 'thuhoi' || txType === 'dc') && fromDept ? getLiveStock(it.ma).qty : null;
+                          const liveStock = getLiveStock(it.ma);
                           return (
-                            <option key={it.ma} value={it.ma}>[{it.ma}] {it.ten} {itemStock !== null ? `- Tồn: ${itemStock}` : ''}</option>
+                            <option key={it.ma} value={it.ma}>[{it.ma}] {it.ten} - Tồn: {liveStock.qty}</option>
                           );
                         })}
                       </select>
