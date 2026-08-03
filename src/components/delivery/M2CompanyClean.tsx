@@ -435,9 +435,7 @@ export default function M2CompanyClean({
                         </div>
                       );
                     })
-                  ) : (
-                    <span className="text-stone-400 text-xs italic block py-2 text-[11px]">Chưa có đồ dơ tại xưởng.</span>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
@@ -461,9 +459,7 @@ export default function M2CompanyClean({
                         </div>
                       );
                     })
-                  ) : (
-                    <span className="text-stone-400 text-xs italic block py-2 text-[11px]">Chưa có đồ sạch tại kho.</span>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -583,9 +579,6 @@ export default function M2CompanyClean({
                 <div className="flex justify-between items-center pb-3 border-b border-stone-200">
                   <div>
                     <h2 className="text-sm font-bold text-stone-900 uppercase">Chi tiết phiếu {activeDispatch.id}</h2>
-                    <span className="text-xs text-stone-500 block mt-0.5">
-                      Người lập: {activeDispatch.driver || currentAccount?.name || 'Quản trị viên'} • Xe: {activeDispatch.plate || 'Chưa rõ'} • Xưởng: {activeDispatch.contractor || 'Thành Đô'}
-                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -895,8 +888,7 @@ export default function M2CompanyClean({
                 )}
               </div>
             ) : (
-              <div className="h-48 border border-dashed border-stone-200 rounded-xl flex items-center justify-center text-stone-400 text-xs">
-                Chưa chọn hóa đơn bốc xếp dơ / trả sạch nào. Click danh sách bên trái để đối soát!
+              <div className="h-48 border border-dashed border-stone-200 rounded-xl flex items-center justify-center">
               </div>
             )}
           </div>

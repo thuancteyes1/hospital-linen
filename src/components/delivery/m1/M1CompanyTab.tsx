@@ -595,9 +595,7 @@ export default function M1CompanyTab({
                 </div>
               </div>
             ))}
-            {wardDeliverySlips.filter(s => s.status === 'verified_dirty').length === 0 && (
-              <span className="text-stone-400 text-xs block text-center py-4 italic">Không còn phiếu nào chờ gom. Đồ dơ đã bốc xếp lên xe hết!</span>
-            )}
+            {wardDeliverySlips.filter(s => s.status === 'verified_dirty').length === 0 && null}
           </div>
 
           {!effectiveIsLaundryUser ? (
@@ -765,9 +763,6 @@ export default function M1CompanyTab({
                   Chi tiết bàn giao xe {activeDispatch.id}
                   <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-amber-100 text-amber-800">Chờ xe tải</span>
                 </h2>
-                <span className="text-xs text-stone-500 block mt-0.5">
-                  Xe: {activeDispatch.plate} • Tài xế: {activeDispatch.driver} • Xưởng: {activeDispatch.contractor}
-                </span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -1041,7 +1036,7 @@ export default function M1CompanyTab({
                     onClick={() => handleVerifyM2Handover(activeDispatch.id)}
                     className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase rounded-lg shadow whitespace-nowrap cursor-pointer transition-all font-bold"
                   >
-                    Xác nhận xe lăn bánh & Trừ kho dơ
+                    Xác nhận và trừ kho dơ
                   </button>
                 </div>
               </div>
@@ -1059,9 +1054,6 @@ export default function M1CompanyTab({
                   Chi tiết phiếu bàn giao {activeDispatch.id}
                   <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-100 text-emerald-800">Đã bàn giao xe</span>
                 </h2>
-                <span className="text-xs text-stone-500 block mt-0.5">
-                  Xe: {activeDispatch.plate || 'Chưa rõ'} • Tài xế: {activeDispatch.driver || 'Tài xế Cty Giặt'} • Xưởng: {activeDispatch.contractor || 'Cty Giặt'}
-                </span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -1113,8 +1105,7 @@ export default function M1CompanyTab({
             </div>
           </div>
         ) : (
-          <div className="h-48 border border-dashed border-stone-200 rounded-xl flex items-center justify-center text-stone-400 text-xs">
-            Chưa chọn hóa đơn bốc xếp dơ nào
+          <div className="h-48 border border-dashed border-stone-200 rounded-xl flex items-center justify-center">
           </div>
         )}
       </div>

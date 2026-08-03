@@ -494,9 +494,7 @@ export default function M3WardDelivery({
                         </div>
                       );
                     })
-                  ) : (
-                    <span className="text-stone-400 text-xs italic col-span-2 py-2">Hết đồ sạch trong kho.</span>
-                  )}
+                  ) : null}
                 </div>
               </div>
             )}
@@ -870,8 +868,7 @@ export default function M3WardDelivery({
                 )}
               </div>
             ) : (
-              <div className="h-48 border border-dashed border-stone-200 rounded-xl flex items-center justify-center text-stone-400 text-xs text-center px-4">
-                Chưa chọn phiếu yêu cầu trả sạch khoa phòng. Click danh sách bên trái để mở rộng đối soát, trả đồ sạch và tự động tách nợ khoa!
+              <div className="h-48 border border-dashed border-stone-200 rounded-xl flex items-center justify-center">
               </div>
             )}
           </div>

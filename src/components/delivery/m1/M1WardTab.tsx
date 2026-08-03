@@ -1403,8 +1403,7 @@ export default function M1WardTab({
             </div>
           )
         ) : (
-          <div className="h-48 border border-dashed border-stone-200 rounded-xl flex items-center justify-center text-stone-400 text-xs">
-            Chưa chọn phiếu dơ khoa phòng nào
+          <div className="h-48 border border-dashed border-stone-200 rounded-xl flex items-center justify-center">
           </div>
         )}
       </div>

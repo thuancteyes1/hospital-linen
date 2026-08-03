@@ -178,9 +178,7 @@ export default function M1DirtyDeclaration({
                         </div>
                       );
                     })
-                  ) : (
-                    <span className="text-stone-400 text-[11px] col-span-4 italic">Trống - Chờ duyệt phiếu dơ từ Khoa lâm sàng để vào kho.</span>
-                  )
+                  ) : null
                 ) : (
                   Object.keys(temporaryCompanyDirtyStore || {}).filter(ma => ((temporaryCompanyDirtyStore || {})[ma] || 0) > 0).length > 0 ? (
                     Object.keys(temporaryCompanyDirtyStore || {}).map(ma => {
@@ -196,9 +194,7 @@ export default function M1DirtyDeclaration({
                         </div>
                       );
                     })
-                  ) : (
-                    <span className="text-stone-400 text-[11px] col-span-4 italic">Trống - Chưa có đồ dơ bàn giao cho xưởng giặt Công ty.</span>
-                  )
+                  ) : null
                 )}
               </div>
             </div>

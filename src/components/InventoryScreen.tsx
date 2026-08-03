@@ -27,6 +27,7 @@ interface InventoryScreenProps {
   isAdmin: boolean;
   canExportReport?: boolean;
   canSeeTrangBill?: boolean;
+  canImportExcel?: boolean;
   departments?: string[];
   userDept?: string;
 }
@@ -48,6 +49,7 @@ export default function InventoryScreen({
   isAdmin,
   canExportReport = true,
   canSeeTrangBill = true,
+  canImportExcel = true,
   departments = DEPARTMENTS,
   userDept
 }: InventoryScreenProps) {
@@ -70,6 +72,7 @@ export default function InventoryScreen({
         isAdmin={isAdmin}
         canExportReport={canExportReport}
         canSeeTrangBill={canSeeTrangBill}
+        canImportExcel={canImportExcel}
         departments={departments}
         userDept={userDept}
         getLinenImage={getLinenImage}

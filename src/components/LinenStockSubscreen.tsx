@@ -31,6 +31,7 @@ interface LinenStockSubscreenProps {
   isAdmin: boolean;
   canExportReport?: boolean;
   canSeeTrangBill?: boolean;
+  canImportExcel?: boolean;
   departments: string[];
   userDept?: string;
   getLinenImage: (item: LinenItem) => string;
@@ -53,6 +54,7 @@ export default function LinenStockSubscreen({
   isAdmin,
   canExportReport = true,
   canSeeTrangBill = true,
+  canImportExcel = true,
   departments,
   userDept,
   getLinenImage
@@ -327,23 +329,23 @@ export default function LinenStockSubscreen({
           <h2 className="font-serif font-black text-2xl text-[#1A1A1A] tracking-tight">KHO ĐỒ VẢI QUY MÔ TOÀN VIỆN</h2>
         </div>
         <div className="flex flex-wrap gap-2.5">
+          {canImportExcel && (
+            <button
+              onClick={() => setShowExcelImportModal(true)}
+              className="px-4 py-2 border border-[#1A1A1A] hover:bg-[#EBE8E3] text-[#1A1A1A] text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer font-bold"
+            >
+              <FileSpreadsheet size={14} className="text-[#16A34A]" />
+              <span>Nạp Kho Excel</span>
+            </button>
+          )}
           {isAdmin && (
-            <>
-              <button
-                onClick={() => setShowExcelImportModal(true)}
-                className="px-4 py-2 border border-[#1A1A1A] hover:bg-[#EBE8E3] text-[#1A1A1A] text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer font-bold"
-              >
-                <FileSpreadsheet size={14} className="text-[#16A34A]" />
-                <span>Nạp Kho Excel</span>
-              </button>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="px-4 py-2 bg-[#1A1A1A] hover:bg-[#C4432A] text-[#F5F2ED] text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all border border-[#1A1A1A] hover:border-[#C4432A] cursor-pointer font-bold"
-              >
-                <Plus size={14} />
-                <span>Thêm Đồ Vải</span>
-              </button>
-            </>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2 bg-[#1A1A1A] hover:bg-[#C4432A] text-[#F5F2ED] text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all border border-[#1A1A1A] hover:border-[#C4432A] cursor-pointer font-bold"
+            >
+              <Plus size={14} />
+              <span>Thêm Đồ Vải</span>
+            </button>
           )}
           {canExportReport && (
             <button
@@ -354,7 +356,7 @@ export default function LinenStockSubscreen({
               <span>Xuất Báo Cáo Tồn</span>
             </button>
           )}
-          {onExportBackup && isAdmin && (
+          {onExportBackup && canImportExcel && (
             <button
               onClick={onExportBackup}
               className="px-4 py-2 bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all rounded-lg shadow-xs cursor-pointer"
@@ -439,7 +441,7 @@ export default function LinenStockSubscreen({
               {!isWardUser && <th className="py-3 px-4 text-right cursor-pointer hover:bg-stone-200/50 transition-colors" onClick={() => handleSort('kc')}>Kho trung tâm {sortCol === 'kc' && (sortAsc ? '▲' : '▼')}</th>}
               {!isWardUser && <th className="py-3 px-4 text-right">Luân chuyển tạm</th>}
               <th className="py-3 px-4 text-right cursor-pointer hover:bg-stone-200/50 transition-colors" onClick={() => handleSort('kp')}>
-                {focusDept ? `Sử dụng tại ${focusDept}` : 'Phân bổ Khoa'} {sortCol === 'kp' && (sortAsc ? '▲' : '▼')}
+                {focusDept ? focusDept : 'Phân bổ Khoa'} {sortCol === 'kp' && (sortAsc ? '▲' : '▼')}
               </th>
               {!isWardUser && <th className="py-3 px-4 text-right cursor-pointer hover:bg-stone-200/50 transition-colors" onClick={() => handleSort('tong')}>Tổng tồn viện {sortCol === 'tong' && (sortAsc ? '▲' : '▼')}</th>}
               {!isWardUser && <th className="py-3 px-4 text-center">Trạng thái an toàn</th>}
@@ -732,7 +734,7 @@ export default function LinenStockSubscreen({
       )}
 
       {/* Excel Import Modal */}
-      {showExcelImportModal && (
+      {showExcelImportModal && canImportExcel && (
         <LinenStockExcelImportModal
           onClose={() => setShowExcelImportModal(false)}
           onConfirm={handleExcelImportConfirm}

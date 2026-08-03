@@ -102,7 +102,8 @@ export default function App() {
     isHousekeepingUser,
     isCurrentlyAdmin,
     canSeeReport,
-    canSeeTrangBill
+    canSeeTrangBill,
+    canImportExcel
   } = useAuth(users, roles, departments, triggerToast);
 
   useEffect(() => {
@@ -330,6 +331,7 @@ export default function App() {
                 isAdmin={effectiveAccount?.isAdmin || currentRoleName.includes('Thủ kho') || currentRoleName.includes('Trưởng kho') || currentRoleName.includes('đồ vải')}
                 canExportReport={canSeeReport}
                 canSeeTrangBill={canSeeTrangBill}
+                canImportExcel={canImportExcel}
                 departments={departments}
                 userDept={currentWardName}
               />
