@@ -7,9 +7,7 @@ import jwt from 'jsonwebtoken';
 import { db, isDbConfigured } from './src/db/index.ts';
 import { users, linenItems, deptAllocations, deliverySlips, laundryDispatches, history } from './src/db/schema.ts';
 import { eq, or } from 'drizzle-orm';
-import { initializeApp, getApps } from 'firebase-admin/app';
-import { getAuth as getAdminAuth } from 'firebase-admin/auth';
-import firebaseConfig from './firebase-applet-config.json';
+
 import authRouter, { getUsersData, syncUsersData } from './routes/auth.ts';
 import inventoryRouter, { getInventoryData, syncInventoryData } from './routes/inventory.ts';
 import deliveryRouter, { getDeliveryData, syncDeliveryData } from './routes/delivery.ts';
@@ -20,13 +18,8 @@ dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'hosplinen-secure-super-secret-key-2026';
 
-// Initialize Firebase Admin
-if (!getApps().length) {
-  initializeApp({
-    projectId: firebaseConfig.projectId,
-  });
-}
-const adminAuth = getAdminAuth();
+
+
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));

@@ -4,19 +4,10 @@ import jwt from 'jsonwebtoken';
 import { db, isDbConfigured } from '../src/db/index.ts';
 import { users } from '../src/db/schema.ts';
 import { eq, or } from 'drizzle-orm';
-import { initializeApp, getApps } from 'firebase-admin/app';
-import { getAuth as getAdminAuth } from 'firebase-admin/auth';
-import firebaseConfig from '../firebase-applet-config.json';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'hosplinen-secure-super-secret-key-2026';
 
-// Initialize Firebase Admin
-if (!getApps().length) {
-  initializeApp({
-    projectId: firebaseConfig.projectId,
-  });
-}
-const adminAuth = getAdminAuth();
+
 
 const router = Router();
 
@@ -227,47 +218,8 @@ router.get('/me', async (req, res) => {
   }
 });
 
-// REST Endpoint: Verify ID token and synchronize/return user context
-router.post('/verify-token', async (req, res) => {
-  const { idToken } = req.body;
-  if (!idToken) {
-    return res.status(401).json({ error: 'Missing ID token' });
-  }
-
-  try {
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
-    const { uid, email, name } = decodedToken;
-
-    // Check if user already exists in PostgreSQL
-    let userRecord = await db.select().from(users).where(eq(users.uid, uid)).limit(1);
-
-    if (userRecord.length === 0) {
-      // Create user record for new Google Login user
-      const result = await db.insert(users).values({
-        uid,
-        email: email || '',
-        name: name || email || 'Hospital User',
-        role: 2, // Default to nurse role
-        dept: 'NICU',
-        status: 'active',
-        isAdmin: false
-      }).returning();
-      userRecord = result;
-    }
-
-    res.json({
-      uid: userRecord[0].uid,
-      email: userRecord[0].email,
-      name: userRecord[0].name,
-      role: userRecord[0].role,
-      dept: userRecord[0].dept,
-      status: userRecord[0].status,
-      isAdmin: userRecord[0].isAdmin
-    });
-  } catch (error: any) {
-    console.error('Error verifying token:', error);
-    res.status(401).json({ error: 'Invalid ID Token' });
-  }
+// REST Endpoint: Verify ID token and synchronize/return user contextrouter.post('/verify-token', async (req, res) => {
+  res.status(503).json({ error: 'Đăng nhập Google tạm thời chưa khả dụng. Vui lòng dùng tên đăng nhập và mật khẩu.' });
 });
 
 export async function getUsersData() {
