@@ -261,11 +261,11 @@ app.get('/api/init', async (req, res) => {
 // Sync complete master state in a single payload
 app.post('/api/sync', async (req, res) => {
   try {
-    const { items, detailAllocations, users: reqUsers, accounts, history: reqHistory, wardDeliverySlips, laundryDispatches: reqDispatches } = req.body;
+    const { items, detailAllocations, users: reqUsers, accounts, history: reqHistory, wardDeliverySlips, laundryDispatches: reqDispatches, temporaryCleanStore, temporaryDirtyStore, temporaryCompanyDirtyStore } = req.body;
 
     await db.transaction(async (tx) => {
       // 1. Sync inventory data
-      await syncInventoryData(tx, items, detailAllocations);
+      await syncInventoryData(tx, items, detailAllocations, temporaryCleanStore, temporaryDirtyStore, temporaryCompanyDirtyStore);
 
       // 2. Sync Users / Accounts
       await syncUsersData(tx, accounts, reqUsers);
