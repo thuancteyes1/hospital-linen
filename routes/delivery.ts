@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { db, isDbConfigured } from '../src/db/index.ts';
 import { deliverySlips, laundryDispatches } from '../src/db/schema.ts';
+import { inMemoryStore, computeTempDirtyStoreFromSlips, updateInMemoryStore } from './serverStore.ts';
 
 const router = Router();
 
@@ -14,37 +15,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-let inMemoryTempStores = {
-  temporaryCleanStore: {} as Record<string, number>,
-  temporaryDirtyStore: {} as Record<string, number>,
-  temporaryCompanyDirtyStore: {} as Record<string, number>
-};
-
-function computeTempDirtyStoreFromSlips(slips: any[]): Record<string, number> {
-  const store: Record<string, number> = {};
-  slips.forEach(s => {
-    if (s.status === 'confirmed' && !s.laundryDispatchId && Array.isArray(s.items)) {
-      s.items.forEach((it: any) => {
-        const ma = it.ma;
-        const qty = it.duyetThucTe !== undefined ? Number(it.duyetThucTe) : Number(it.khaiBao || 0);
-        if (ma && qty > 0) {
-          store[ma] = (store[ma] || 0) + qty;
-        }
-      });
-    }
-  });
-  return store;
-}
-
 export async function getDeliveryData() {
-  let slipsList: any[] = [];
-  let dispatchesList: any[] = [];
+  let slipsList: any[] = inMemoryStore.wardDeliverySlips;
+  let dispatchesList: any[] = inMemoryStore.laundryDispatches;
 
-  if (!isDbConfigured()) {
-    const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data.ts');
-    slipsList = INITIAL_WARD_DELIVERY_SLIPS;
-    dispatchesList = INITIAL_LAUNDRY_DISPATCHES;
-  } else {
+  if (isDbConfigured()) {
     try {
       const dbSlips = await db.select().from(deliverySlips);
       const dbDispatches = await db.select().from(laundryDispatches);
@@ -61,25 +36,27 @@ export async function getDeliveryData() {
         linkedSlipIds: JSON.parse(d.linkedSlipIds),
         items: JSON.parse(d.items)
       }));
+
+      inMemoryStore.wardDeliverySlips = slipsList;
+      inMemoryStore.laundryDispatches = dispatchesList;
     } catch (err) {
-      console.warn('PostgreSQL query failed in getDeliveryData, falling back to static data:', err);
-      const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data.ts');
-      slipsList = INITIAL_WARD_DELIVERY_SLIPS;
-      dispatchesList = INITIAL_LAUNDRY_DISPATCHES;
+      console.warn('PostgreSQL query failed in getDeliveryData, falling back to inMemoryStore:', err);
+      slipsList = inMemoryStore.wardDeliverySlips;
+      dispatchesList = inMemoryStore.laundryDispatches;
     }
   }
 
-  // Calculate dirty store if not set explicitly
-  const dirtyStoreToReturn = Object.keys(inMemoryTempStores.temporaryDirtyStore).length > 0
-    ? inMemoryTempStores.temporaryDirtyStore
+  // Calculate dirty store if empty
+  const dirtyStoreToReturn = Object.keys(inMemoryStore.temporaryDirtyStore).length > 0
+    ? inMemoryStore.temporaryDirtyStore
     : computeTempDirtyStoreFromSlips(slipsList);
 
   return {
     wardDeliverySlips: slipsList,
     laundryDispatches: dispatchesList,
-    temporaryCleanStore: inMemoryTempStores.temporaryCleanStore,
+    temporaryCleanStore: inMemoryStore.temporaryCleanStore,
     temporaryDirtyStore: dirtyStoreToReturn,
-    temporaryCompanyDirtyStore: inMemoryTempStores.temporaryCompanyDirtyStore
+    temporaryCompanyDirtyStore: inMemoryStore.temporaryCompanyDirtyStore
   };
 }
 
@@ -91,11 +68,16 @@ export async function syncDeliveryData(
   temporaryDirtyStore?: Record<string, number>,
   temporaryCompanyDirtyStore?: Record<string, number>
 ) {
-  if (temporaryCleanStore) inMemoryTempStores.temporaryCleanStore = temporaryCleanStore;
-  if (temporaryDirtyStore) inMemoryTempStores.temporaryDirtyStore = temporaryDirtyStore;
-  if (temporaryCompanyDirtyStore) inMemoryTempStores.temporaryCompanyDirtyStore = temporaryCompanyDirtyStore;
-  // Sync Delivery Slips
-  if (wardDeliverySlips) {
+  updateInMemoryStore({
+    wardDeliverySlips,
+    laundryDispatches: reqDispatches,
+    temporaryCleanStore,
+    temporaryDirtyStore,
+    temporaryCompanyDirtyStore
+  });
+
+  // Sync Delivery Slips to DB if tx is present
+  if (tx && wardDeliverySlips) {
     await tx.delete(deliverySlips);
     const slipsToInsert = wardDeliverySlips.map((slip: any) => ({
       id: slip.id,
@@ -129,8 +111,8 @@ export async function syncDeliveryData(
     }
   }
 
-  // Sync Laundry Dispatches
-  if (reqDispatches) {
+  // Sync Laundry Dispatches to DB if tx is present
+  if (tx && reqDispatches) {
     await tx.delete(laundryDispatches);
     const dispatchesToInsert = reqDispatches.map((ld: any) => ({
       id: ld.id,

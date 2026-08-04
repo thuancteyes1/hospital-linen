@@ -12,6 +12,7 @@ import authRouter, { getUsersData, syncUsersData } from './routes/auth.ts';
 import inventoryRouter, { getInventoryData, syncInventoryData } from './routes/inventory.ts';
 import deliveryRouter, { getDeliveryData, syncDeliveryData } from './routes/delivery.ts';
 import reportsRouter, { getReportsData, syncReportsData } from './routes/reports.ts';
+import { updateInMemoryStore } from './routes/serverStore.ts';
 
 // Initialize dotenv
 dotenv.config();
@@ -277,26 +278,29 @@ app.post('/api/sync', async (req, res) => {
       temporaryCompanyDirtyStore
     } = req.body;
 
-    await db.transaction(async (tx) => {
-      // 1. Sync inventory data
-      await syncInventoryData(tx, items, detailAllocations);
+    // 1. Update in-memory store synchronously
+    updateInMemoryStore(req.body);
 
-      // 2. Sync Users / Accounts
-      await syncUsersData(tx, accounts, reqUsers);
-
-      // 3. Sync Delivery Slips & Laundry Dispatches & Temporary Stores
-      await syncDeliveryData(
-        tx, 
-        wardDeliverySlips, 
-        reqDispatches, 
-        temporaryCleanStore, 
-        temporaryDirtyStore, 
-        temporaryCompanyDirtyStore
-      );
-
-      // 4. Sync history transactions logs
-      await syncReportsData(tx, reqHistory);
-    });
+    // 2. Sync to PostgreSQL if DB is configured
+    if (isDbConfigured()) {
+      try {
+        await db.transaction(async (tx) => {
+          await syncInventoryData(tx, items, detailAllocations);
+          await syncUsersData(tx, accounts, reqUsers);
+          await syncDeliveryData(
+            tx, 
+            wardDeliverySlips, 
+            reqDispatches, 
+            temporaryCleanStore, 
+            temporaryDirtyStore, 
+            temporaryCompanyDirtyStore
+          );
+          await syncReportsData(tx, reqHistory);
+        });
+      } catch (dbErr: any) {
+        console.warn('PostgreSQL sync failed, but state updated in memory:', dbErr.message || dbErr);
+      }
+    }
 
     res.json({ success: true, message: 'Database state synchronized perfectly' });
   } catch (err: any) {

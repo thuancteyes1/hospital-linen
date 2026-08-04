@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { db, isDbConfigured } from '../src/db/index.ts';
 import { users } from '../src/db/schema.ts';
 import { eq, or } from 'drizzle-orm';
+import { inMemoryStore, updateInMemoryStore } from './serverStore.ts';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'hosplinen-secure-super-secret-key-2026';
 
@@ -218,55 +219,56 @@ router.get('/me', async (req, res) => {
   }
 });
 
-// REST Endpoint: Verify ID token and synchronize/return user contextrouter.post('/verify-token', async (req, res) => {
+// REST Endpoint: Verify ID token and synchronize/return user context
+router.post('/verify-token', async (req, res) => {
   res.status(503).json({ error: 'Đăng nhập Google tạm thời chưa khả dụng. Vui lòng dùng tên đăng nhập và mật khẩu.' });
 });
 
 export async function getUsersData() {
-  if (!isDbConfigured()) {
-    const { INITIAL_ACCOUNTS, INITIAL_USERS } = await import('../src/data.ts');
-    return {
-      users: INITIAL_USERS,
-      accounts: INITIAL_ACCOUNTS
-    };
+  if (isDbConfigured()) {
+    try {
+      const dbUsers = await db.select().from(users);
+
+      // Map accounts and users
+      const accountsList = dbUsers.map((u) => ({
+        username: u.uid.startsWith('mock:') ? u.uid.substring(5) : u.uid,
+        email: u.email,
+        name: u.name,
+        isAdmin: u.isAdmin,
+        status: u.status as any,
+        userIdx: u.id
+      }));
+
+      const usersList = dbUsers.map((u) => ({
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        dept: u.dept,
+        status: u.status as any
+      }));
+
+      inMemoryStore.users = usersList;
+      inMemoryStore.accounts = accountsList;
+
+      return {
+        users: usersList,
+        accounts: accountsList
+      };
+    } catch (err) {
+      console.warn('PostgreSQL query failed in getUsersData, using inMemoryStore:', err);
+    }
   }
-  try {
-    const dbUsers = await db.select().from(users);
 
-    // Map accounts and users
-    const accountsList = dbUsers.map((u) => ({
-      username: u.uid.startsWith('mock:') ? u.uid.substring(5) : u.uid,
-      email: u.email,
-      name: u.name,
-      isAdmin: u.isAdmin,
-      status: u.status as any,
-      userIdx: u.id
-    }));
-
-    const usersList = dbUsers.map((u) => ({
-      name: u.name,
-      email: u.email,
-      role: u.role,
-      dept: u.dept,
-      status: u.status as any
-    }));
-
-    return {
-      users: usersList,
-      accounts: accountsList
-    };
-  } catch (err) {
-    console.warn('PostgreSQL query failed in getUsersData, using initial static data:', err);
-    const { INITIAL_ACCOUNTS, INITIAL_USERS } = await import('../src/data.ts');
-    return {
-      users: INITIAL_USERS,
-      accounts: INITIAL_ACCOUNTS
-    };
-  }
+  return {
+    users: inMemoryStore.users,
+    accounts: inMemoryStore.accounts
+  };
 }
 
 export async function syncUsersData(tx: any, accounts: any[], reqUsers: any[]) {
-  if (accounts) {
+  updateInMemoryStore({ accounts, users: reqUsers });
+
+  if (tx && accounts) {
     // Fetch existing users to preserve their password hashes
     const existingDbUsers = await tx.select().from(users);
     const passwordHashMap = new Map<string, string>();
