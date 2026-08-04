@@ -30,6 +30,8 @@ export default function UserManagement({
   const [userQuery, setUserQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [sortCol, setSortCol] = useState<'role' | 'name' | 'dept' | 'status'>('role');
+  const [sortAsc, setSortAsc] = useState(true);
 
   // Local Modal Triggers & Form states
   const [showUserModal, setShowUserModal] = useState<number | null | 'add'>(null);
@@ -95,7 +97,17 @@ export default function UserManagement({
     onUpdatePendingRegs(nextPending);
   };
 
-  // Filtered Users List
+  // Sort Header handler
+  const handleSort = (col: 'role' | 'name' | 'dept' | 'status') => {
+    if (sortCol === col) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortCol(col);
+      setSortAsc(true);
+    }
+  };
+
+  // Filtered Users List (Sorted & Grouped)
   const filteredUsers = useMemo(() => {
     let list = users.map((u, i) => ({ ...u, originalIdx: i }));
 
@@ -112,8 +124,31 @@ export default function UserManagement({
       list = list.filter(u => u.status === statusFilter);
     }
 
+    // Sort list
+    list.sort((a, b) => {
+      if (sortCol === 'role') {
+        if (a.role !== b.role) {
+          return sortAsc ? a.role - b.role : b.role - a.role;
+        }
+        return a.name.localeCompare(b.name, 'vi');
+      }
+      if (sortCol === 'name') {
+        const comp = a.name.localeCompare(b.name, 'vi');
+        return sortAsc ? comp : -comp;
+      }
+      if (sortCol === 'dept') {
+        const comp = (a.dept || '').localeCompare(b.dept || '', 'vi');
+        return sortAsc ? comp : -comp;
+      }
+      if (sortCol === 'status') {
+        const comp = a.status.localeCompare(b.status);
+        return sortAsc ? comp : -comp;
+      }
+      return 0;
+    });
+
     return list;
-  }, [users, roles, userQuery, roleFilter, statusFilter]);
+  }, [users, roles, userQuery, roleFilter, statusFilter, sortCol, sortAsc]);
 
   // Modal open wrappers
   const handleOpenEditUser = (origIdx: number) => {
@@ -343,6 +378,19 @@ export default function UserManagement({
           </select>
         </div>
 
+        <div className="w-full md:w-56">
+          <select
+            value={sortCol}
+            onChange={e => setSortCol(e.target.value as any)}
+            className="w-full bg-[#F5F2ED] border border-[#1A1A1A] p-2 text-xs focus:outline-none font-medium"
+          >
+            <option value="role">Xếp nhóm: Vai trò hành chính</option>
+            <option value="name">Xếp tên: A - Z</option>
+            <option value="dept">Xếp theo: Khoa phòng</option>
+            <option value="status">Xếp theo: Trạng thái</option>
+          </select>
+        </div>
+
         <div className="text-[11px] font-mono text-[#8C8984] md:ml-auto">
           Tìm thấy {filteredUsers.length} người dùng
         </div>
@@ -353,25 +401,45 @@ export default function UserManagement({
         <table className="w-full text-left border-collapse text-xs">
           <thead>
             <tr className="bg-[#EBE8E3] border-b border-[#1A1A1A] font-mono text-[9px] uppercase tracking-widest text-[#1A1A1A]">
-              <th className="py-2.5 px-4">Họ và tên nhân viên</th>
-              <th className="py-2.5 px-4">Vai trò hành chính</th>
+              <th className="py-2.5 px-4 cursor-pointer hover:bg-stone-300/50" onClick={() => handleSort('name')}>
+                Họ và tên nhân viên {sortCol === 'name' && (sortAsc ? '▲' : '▼')}
+              </th>
+              <th className="py-2.5 px-4 cursor-pointer hover:bg-stone-300/50" onClick={() => handleSort('role')}>
+                Vai trò hành chính {sortCol === 'role' && (sortAsc ? '▲' : '▼')}
+              </th>
               <th className="py-2.5 px-4">Tài khoản xác thực</th>
-              <th className="py-2.5 px-4">Đơn vị phụ trách</th>
-              <th className="py-2.5 px-4 text-center">Trạng thái</th>
+              <th className="py-2.5 px-4 cursor-pointer hover:bg-stone-300/50" onClick={() => handleSort('dept')}>
+                Đơn vị phụ trách {sortCol === 'dept' && (sortAsc ? '▲' : '▼')}
+              </th>
+              <th className="py-2.5 px-4 text-center cursor-pointer hover:bg-stone-300/50" onClick={() => handleSort('status')}>
+                Trạng thái {sortCol === 'status' && (sortAsc ? '▲' : '▼')}
+              </th>
               <th className="py-2.5 px-4 text-center">Hành động</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#1A1A1A]">
-            {filteredUsers.map(u => {
+            {filteredUsers.map((u, idx) => {
               const rObj = roles[u.role] || { name: 'Người dùng', color: '#8C8984' };
               const nameParts = u.name.split(' ');
               const initials = nameParts.length >= 2 ?
                 (nameParts[nameParts.length - 2][0] + nameParts[nameParts.length - 1][0]).toUpperCase() :
                 u.name.slice(0, 2).toUpperCase();
 
+              // Check if we need a role section header when sorting by role
+              const prevUser = idx > 0 ? filteredUsers[idx - 1] : null;
+              const isFirstInRoleGroup = sortCol === 'role' && (!prevUser || prevUser.role !== u.role);
+
               return (
-                <tr key={u.email} className="hover:bg-[#EBE8E3]">
-                  <td className="py-3 px-4 font-bold text-[#1A1A1A]">
+                <React.Fragment key={u.email}>
+                  {isFirstInRoleGroup && (
+                    <tr className="bg-stone-200/90 border-t border-b border-stone-300">
+                      <td colSpan={6} className="py-1.5 px-4 font-mono text-[10px] font-black uppercase tracking-wider text-stone-700">
+                        • NHÓM VAI TRÒ: <span style={{ color: rObj.color }}>{rObj.name}</span>
+                      </td>
+                    </tr>
+                  )}
+                  <tr className="hover:bg-[#EBE8E3]">
+                    <td className="py-3 px-4 font-bold text-[#1A1A1A]">
                     <div className="flex items-center gap-2.5">
                       <div
                         className="w-8 h-8 rounded-none border border-[#1A1A1A] text-white flex items-center justify-center font-mono font-bold text-[11px] flex-shrink-0"
@@ -428,7 +496,8 @@ export default function UserManagement({
                     </div>
                   </td>
                 </tr>
-              );
+              </React.Fragment>
+            );
             })}
           </tbody>
         </table>

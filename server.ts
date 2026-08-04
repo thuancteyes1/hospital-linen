@@ -7,6 +7,9 @@ import jwt from 'jsonwebtoken';
 import { db, isDbConfigured } from './src/db/index.ts';
 import { users, linenItems, deptAllocations, deliverySlips, laundryDispatches, history } from './src/db/schema.ts';
 import { eq, or } from 'drizzle-orm';
+import { initializeApp, getApps } from 'firebase-admin/app';
+import { getAuth as getAdminAuth } from 'firebase-admin/auth';
+import firebaseConfig from './firebase-applet-config.json';
 import authRouter, { getUsersData, syncUsersData } from './routes/auth.ts';
 import inventoryRouter, { getInventoryData, syncInventoryData } from './routes/inventory.ts';
 import deliveryRouter, { getDeliveryData, syncDeliveryData } from './routes/delivery.ts';
@@ -17,6 +20,13 @@ dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'hosplinen-secure-super-secret-key-2026';
 
+// Initialize Firebase Admin
+if (!getApps().length) {
+  initializeApp({
+    projectId: firebaseConfig.projectId,
+  });
+}
+const adminAuth = getAdminAuth();
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -261,17 +271,35 @@ app.get('/api/init', async (req, res) => {
 // Sync complete master state in a single payload
 app.post('/api/sync', async (req, res) => {
   try {
-    const { items, detailAllocations, users: reqUsers, accounts, history: reqHistory, wardDeliverySlips, laundryDispatches: reqDispatches, temporaryCleanStore, temporaryDirtyStore, temporaryCompanyDirtyStore } = req.body;
+    const { 
+      items, 
+      detailAllocations, 
+      users: reqUsers, 
+      accounts, 
+      history: reqHistory, 
+      wardDeliverySlips, 
+      laundryDispatches: reqDispatches,
+      temporaryCleanStore,
+      temporaryDirtyStore,
+      temporaryCompanyDirtyStore
+    } = req.body;
 
     await db.transaction(async (tx) => {
       // 1. Sync inventory data
-      await syncInventoryData(tx, items, detailAllocations, temporaryCleanStore, temporaryDirtyStore, temporaryCompanyDirtyStore);
+      await syncInventoryData(tx, items, detailAllocations);
 
       // 2. Sync Users / Accounts
       await syncUsersData(tx, accounts, reqUsers);
 
-      // 3. Sync Delivery Slips & Laundry Dispatches
-      await syncDeliveryData(tx, wardDeliverySlips, reqDispatches);
+      // 3. Sync Delivery Slips & Laundry Dispatches & Temporary Stores
+      await syncDeliveryData(
+        tx, 
+        wardDeliverySlips, 
+        reqDispatches, 
+        temporaryCleanStore, 
+        temporaryDirtyStore, 
+        temporaryCompanyDirtyStore
+      );
 
       // 4. Sync history transactions logs
       await syncReportsData(tx, reqHistory);

@@ -14,46 +14,86 @@ router.get('/', async (req, res) => {
   }
 });
 
-export async function getDeliveryData() {
-  if (!isDbConfigured()) {
-    const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data.ts');
-    return {
-      wardDeliverySlips: INITIAL_WARD_DELIVERY_SLIPS,
-      laundryDispatches: INITIAL_LAUNDRY_DISPATCHES
-    };
-  }
-  try {
-    const dbSlips = await db.select().from(deliverySlips);
-    const dbDispatches = await db.select().from(laundryDispatches);
+let inMemoryTempStores = {
+  temporaryCleanStore: {} as Record<string, number>,
+  temporaryDirtyStore: {} as Record<string, number>,
+  temporaryCompanyDirtyStore: {} as Record<string, number>
+};
 
-    // Map slips
-    const slipsList = dbSlips.map((s) => ({
-      ...s,
-      items: JSON.parse(s.items)
-    }));
-
-    // Map dispatches
-    const dispatchesList = dbDispatches.map((d) => ({
-      ...d,
-      linkedSlipIds: JSON.parse(d.linkedSlipIds),
-      items: JSON.parse(d.items)
-    }));
-
-    return {
-      wardDeliverySlips: slipsList,
-      laundryDispatches: dispatchesList
-    };
-  } catch (err) {
-    console.warn('PostgreSQL query failed in getDeliveryData, falling back to static data:', err);
-    const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data.ts');
-    return {
-      wardDeliverySlips: INITIAL_WARD_DELIVERY_SLIPS,
-      laundryDispatches: INITIAL_LAUNDRY_DISPATCHES
-    };
-  }
+function computeTempDirtyStoreFromSlips(slips: any[]): Record<string, number> {
+  const store: Record<string, number> = {};
+  slips.forEach(s => {
+    if (s.status === 'confirmed' && !s.laundryDispatchId && Array.isArray(s.items)) {
+      s.items.forEach((it: any) => {
+        const ma = it.ma;
+        const qty = it.duyetThucTe !== undefined ? Number(it.duyetThucTe) : Number(it.khaiBao || 0);
+        if (ma && qty > 0) {
+          store[ma] = (store[ma] || 0) + qty;
+        }
+      });
+    }
+  });
+  return store;
 }
 
-export async function syncDeliveryData(tx: any, wardDeliverySlips: any[], reqDispatches: any[]) {
+export async function getDeliveryData() {
+  let slipsList: any[] = [];
+  let dispatchesList: any[] = [];
+
+  if (!isDbConfigured()) {
+    const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data.ts');
+    slipsList = INITIAL_WARD_DELIVERY_SLIPS;
+    dispatchesList = INITIAL_LAUNDRY_DISPATCHES;
+  } else {
+    try {
+      const dbSlips = await db.select().from(deliverySlips);
+      const dbDispatches = await db.select().from(laundryDispatches);
+
+      // Map slips
+      slipsList = dbSlips.map((s) => ({
+        ...s,
+        items: JSON.parse(s.items)
+      }));
+
+      // Map dispatches
+      dispatchesList = dbDispatches.map((d) => ({
+        ...d,
+        linkedSlipIds: JSON.parse(d.linkedSlipIds),
+        items: JSON.parse(d.items)
+      }));
+    } catch (err) {
+      console.warn('PostgreSQL query failed in getDeliveryData, falling back to static data:', err);
+      const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data.ts');
+      slipsList = INITIAL_WARD_DELIVERY_SLIPS;
+      dispatchesList = INITIAL_LAUNDRY_DISPATCHES;
+    }
+  }
+
+  // Calculate dirty store if not set explicitly
+  const dirtyStoreToReturn = Object.keys(inMemoryTempStores.temporaryDirtyStore).length > 0
+    ? inMemoryTempStores.temporaryDirtyStore
+    : computeTempDirtyStoreFromSlips(slipsList);
+
+  return {
+    wardDeliverySlips: slipsList,
+    laundryDispatches: dispatchesList,
+    temporaryCleanStore: inMemoryTempStores.temporaryCleanStore,
+    temporaryDirtyStore: dirtyStoreToReturn,
+    temporaryCompanyDirtyStore: inMemoryTempStores.temporaryCompanyDirtyStore
+  };
+}
+
+export async function syncDeliveryData(
+  tx: any, 
+  wardDeliverySlips: any[], 
+  reqDispatches: any[],
+  temporaryCleanStore?: Record<string, number>,
+  temporaryDirtyStore?: Record<string, number>,
+  temporaryCompanyDirtyStore?: Record<string, number>
+) {
+  if (temporaryCleanStore) inMemoryTempStores.temporaryCleanStore = temporaryCleanStore;
+  if (temporaryDirtyStore) inMemoryTempStores.temporaryDirtyStore = temporaryDirtyStore;
+  if (temporaryCompanyDirtyStore) inMemoryTempStores.temporaryCompanyDirtyStore = temporaryCompanyDirtyStore;
   // Sync Delivery Slips
   if (wardDeliverySlips) {
     await tx.delete(deliverySlips);

@@ -81,6 +81,9 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
         setHistory(data.history);
         setWardDeliverySlips(data.wardDeliverySlips);
         setLaundryDispatches(data.laundryDispatches);
+        if (data.temporaryCleanStore) setTemporaryCleanStore(data.temporaryCleanStore);
+        if (data.temporaryDirtyStore) setTemporaryDirtyStore(data.temporaryDirtyStore);
+        if (data.temporaryCompanyDirtyStore) setTemporaryCompanyDirtyStore(data.temporaryCompanyDirtyStore);
         
         let loadedDepts = DEPARTMENTS;
         try {
@@ -151,6 +154,48 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
       }
     }
     initData();
+  }, []);
+
+  // Real-time synchronization polling across Mobile and PC
+  useEffect(() => {
+    const syncWithServer = async () => {
+      try {
+        const res = await fetch('/api/init');
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (data.items) setItems(data.items);
+        if (data.detailAllocations) setDetailAllocations(data.detailAllocations);
+        if (data.users) setUsers(data.users);
+        if (data.accounts) setAccounts(data.accounts);
+        if (data.history) setHistory(data.history);
+        if (data.wardDeliverySlips) setWardDeliverySlips(data.wardDeliverySlips);
+        if (data.laundryDispatches) setLaundryDispatches(data.laundryDispatches);
+        if (data.temporaryCleanStore) setTemporaryCleanStore(data.temporaryCleanStore);
+        if (data.temporaryDirtyStore) setTemporaryDirtyStore(data.temporaryDirtyStore);
+        if (data.temporaryCompanyDirtyStore) setTemporaryCompanyDirtyStore(data.temporaryCompanyDirtyStore);
+      } catch (_) {
+        // Silent catch for background sync blips
+      }
+    };
+
+    // Auto-poll every 5 seconds
+    const interval = setInterval(syncWithServer, 5000);
+
+    const handleFocus = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        syncWithServer();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+    };
   }, []);
 
   useEffect(() => {
@@ -284,7 +329,7 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
     };
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
 
-    // Async sync state to PostgreSQL
+    // Async sync state to PostgreSQL & Server State
     fetch('/api/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -296,7 +341,10 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
         accounts: newAccounts,
         history: newHistory,
         wardDeliverySlips: newWardSlips,
-        laundryDispatches: newLaundryDispatches
+        laundryDispatches: newLaundryDispatches,
+        temporaryCleanStore: newTempStore,
+        temporaryDirtyStore: newTempDirtyStore,
+        temporaryCompanyDirtyStore: newTempCompanyDirtyStore
       })
     })
     .then(async (res) => {
