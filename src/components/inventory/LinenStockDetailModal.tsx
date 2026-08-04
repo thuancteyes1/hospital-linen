@@ -9,6 +9,7 @@ interface LinenStockDetailModalProps {
   selectedDetailItem: LinenItem;
   getLinenImage: (item: LinenItem) => string;
   isWardUser: boolean;
+  canManageCatalog?: boolean;
   detailAllocations: Record<string, [string, number][]>;
   temporaryDirtyStore: Record<string, number>;
   temporaryCompanyDirtyStore: Record<string, number>;
@@ -22,6 +23,7 @@ export default function LinenStockDetailModal({
   selectedDetailItem,
   getLinenImage,
   isWardUser,
+  canManageCatalog = false,
   detailAllocations,
   temporaryDirtyStore,
   temporaryCompanyDirtyStore,
@@ -90,7 +92,7 @@ export default function LinenStockDetailModal({
                   <span>{uploadError}</span>
                 </div>
               )}
-              {!isWardUser && (
+              {canManageCatalog && (
                 <div className="pt-2 flex flex-col gap-2">
                   <input
                     type="file"

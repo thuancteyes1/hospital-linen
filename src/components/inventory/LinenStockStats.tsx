@@ -7,22 +7,46 @@ interface StatsData {
   errCount: number;
   warnCount: number;
   okCount: number;
+  locationLabel?: string;
 }
 
 interface LinenStockStatsProps {
   stats: StatsData;
   isWardUser: boolean;
+  canSeeStockWarning?: boolean;
 }
 
-export default function LinenStockStats({ stats, isWardUser }: LinenStockStatsProps) {
+export default function LinenStockStats({ stats, isWardUser, canSeeStockWarning = true }: LinenStockStatsProps) {
+  const isLocationFiltered = !!stats.locationLabel;
+  const locationStockQty = stats.locationLabel === 'Kho Trung Tâm' ? stats.totalKC : stats.totalKP;
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className={`grid grid-cols-2 ${canSeeStockWarning ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4`}>
       <div className="border border-[#1A1A1A] bg-[#F5F2ED] p-4 flex flex-col justify-between shadow-2xs">
         <span className="text-[10px] uppercase font-black tracking-widest text-[#8C8984] font-bold">Mặt Hàng</span>
         <span className="text-xl font-mono font-black text-[#1A1A1A] block mt-1">{stats.totalItems.toLocaleString()} loại</span>
       </div>
 
-      {!isWardUser ? (
+      {isLocationFiltered ? (
+        <>
+          <div className={`border border-[#1A1A1A] bg-[#F5F2ED] p-4 flex flex-col justify-between shadow-2xs ${canSeeStockWarning ? 'col-span-1 md:col-span-2' : 'col-span-1 md:col-span-2'}`}>
+            <span className="text-[10px] uppercase font-black tracking-widest text-[#8C8984] font-bold">
+              Tổng Tồn {stats.locationLabel}
+            </span>
+            <span className="text-xl font-mono font-black text-emerald-700 block mt-1">{locationStockQty.toLocaleString()} cái</span>
+          </div>
+          {canSeeStockWarning && (
+            <div className="border border-[#1A1A1A] bg-[#F5F2ED] p-4 flex flex-col justify-between shadow-2xs">
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#8C8984] font-bold">Cảnh Báo Tồn</span>
+              <div className="flex gap-2 items-center mt-1">
+                {stats.errCount > 0 && <span className="text-xs font-bold text-red-600 font-mono">Hết: {stats.errCount}</span>}
+                {stats.warnCount > 0 && <span className="text-xs font-bold text-amber-600 font-mono">Thấp: {stats.warnCount}</span>}
+                {stats.errCount === 0 && stats.warnCount === 0 && <span className="text-xs font-bold text-emerald-600">Ổn định ✓</span>}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
         <>
           <div className="border border-[#1A1A1A] bg-[#F5F2ED] p-4 flex flex-col justify-between shadow-2xs">
             <span className="text-[10px] uppercase font-black tracking-widest text-[#8C8984] font-bold">Kho Trung Tâm</span>
@@ -32,21 +56,16 @@ export default function LinenStockStats({ stats, isWardUser }: LinenStockStatsPr
             <span className="text-[10px] uppercase font-black tracking-widest text-[#8C8984] font-bold">Lâm Sàng Phân Bổ</span>
             <span className="text-xl font-mono font-black text-amber-700 block mt-1">{stats.totalKP.toLocaleString()} cái</span>
           </div>
-          <div className="border border-[#1A1A1A] bg-[#F5F2ED] p-4 flex flex-col justify-between shadow-2xs">
-            <span className="text-[10px] uppercase font-black tracking-widest text-[#8C8984] font-bold">Cảnh Báo Tồn</span>
-            <div className="flex gap-2 items-center mt-1">
-              {stats.errCount > 0 && <span className="text-xs font-bold text-red-600 font-mono">Hết: {stats.errCount}</span>}
-              {stats.warnCount > 0 && <span className="text-xs font-bold text-amber-600 font-mono">Thấp: {stats.warnCount}</span>}
-              {stats.errCount === 0 && stats.warnCount === 0 && <span className="text-xs font-bold text-emerald-600">Ổn định ✓</span>}
+          {canSeeStockWarning && (
+            <div className="border border-[#1A1A1A] bg-[#F5F2ED] p-4 flex flex-col justify-between shadow-2xs">
+              <span className="text-[10px] uppercase font-black tracking-widest text-[#8C8984] font-bold">Cảnh Báo Tồn</span>
+              <div className="flex gap-2 items-center mt-1">
+                {stats.errCount > 0 && <span className="text-xs font-bold text-red-600 font-mono">Hết: {stats.errCount}</span>}
+                {stats.warnCount > 0 && <span className="text-xs font-bold text-amber-600 font-mono">Thấp: {stats.warnCount}</span>}
+                {stats.errCount === 0 && stats.warnCount === 0 && <span className="text-xs font-bold text-emerald-600">Ổn định ✓</span>}
+              </div>
             </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="border border-[#1A1A1A] bg-[#F5F2ED] p-4 flex flex-col justify-between shadow-2xs col-span-3">
-            <span className="text-[10px] uppercase font-black tracking-widest text-[#8C8984] font-bold">Tổng Tồn Khoa Lâm Sàng</span>
-            <span className="text-xl font-mono font-black text-emerald-700 block mt-1">{stats.totalKP.toLocaleString()} cái</span>
-          </div>
+          )}
         </>
       )}
     </div>

@@ -28,6 +28,7 @@ interface InventoryScreenProps {
   canExportReport?: boolean;
   canSeeTrangBill?: boolean;
   canImportExcel?: boolean;
+  canSeeStockWarning?: boolean;
   departments?: string[];
   userDept?: string;
 }
@@ -50,6 +51,7 @@ export default function InventoryScreen({
   canExportReport = true,
   canSeeTrangBill = true,
   canImportExcel = true,
+  canSeeStockWarning = true,
   departments = DEPARTMENTS,
   userDept
 }: InventoryScreenProps) {
@@ -73,6 +75,7 @@ export default function InventoryScreen({
         canExportReport={canExportReport}
         canSeeTrangBill={canSeeTrangBill}
         canImportExcel={canImportExcel}
+        canSeeStockWarning={canSeeStockWarning}
         departments={departments}
         userDept={userDept}
         getLinenImage={getLinenImage}

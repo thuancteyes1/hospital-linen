@@ -103,7 +103,9 @@ export default function App() {
     isCurrentlyAdmin,
     canSeeReport,
     canSeeTrangBill,
-    canImportExcel
+    canImportExcel,
+    canManageCatalog,
+    canSeeStockWarning
   } = useAuth(users, roles, departments, triggerToast);
 
   useEffect(() => {
@@ -328,10 +330,11 @@ export default function App() {
                 onInitTest={handleInitTestStock}
                 onViewAllocations={(ma, ten) => setAllocationModal({ ma, ten })}
                 onUpdateInventory={(newItems, newDetail) => saveAllStates(newItems, newDetail, roles, users, accounts, history, pendingRegs, departments, wardDeliverySlips, laundryDispatches, temporaryCleanStore)}
-                isAdmin={effectiveAccount?.isAdmin || currentRoleName.includes('Thủ kho') || currentRoleName.includes('Trưởng kho') || currentRoleName.includes('đồ vải')}
+                isAdmin={canManageCatalog}
                 canExportReport={canSeeReport}
                 canSeeTrangBill={canSeeTrangBill}
                 canImportExcel={canImportExcel}
+                canSeeStockWarning={canSeeStockWarning}
                 departments={departments}
                 userDept={currentWardName}
               />

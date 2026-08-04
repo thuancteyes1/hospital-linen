@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { LinenItem, LINEN_GROUPS, LINEN_PAGES } from '../types';
 import { handleImageError } from '../utils/imageUtils';
@@ -32,6 +32,7 @@ interface LinenStockSubscreenProps {
   canExportReport?: boolean;
   canSeeTrangBill?: boolean;
   canImportExcel?: boolean;
+  canSeeStockWarning?: boolean;
   departments: string[];
   userDept?: string;
   getLinenImage: (item: LinenItem) => string;
@@ -55,6 +56,7 @@ export default function LinenStockSubscreen({
   canExportReport = true,
   canSeeTrangBill = true,
   canImportExcel = true,
+  canSeeStockWarning = true,
   departments,
   userDept,
   getLinenImage
@@ -75,6 +77,18 @@ export default function LinenStockSubscreen({
     }
     return '';
   });
+
+  useEffect(() => {
+    if (userDept && userDept !== 'Kho trung tâm' && userDept !== 'Tất cả' && userDept !== 'Tất cả (Không giới hạn)') {
+      const normalizedUserDept = userDept.replace(/^Khoa\s+/i, '');
+      const matched = departments.find(d => d.toLowerCase() === normalizedUserDept.toLowerCase() || normalizedUserDept.toLowerCase().includes(d.toLowerCase()));
+      setSelectedLocation(matched || userDept);
+    } else if (userDept === 'Kho trung tâm') {
+      setSelectedLocation('kho');
+    } else {
+      setSelectedLocation('');
+    }
+  }, [userDept, departments]);
 
   // Helper to get allocation quantity for a specific department
   const getDeptAllocQty = (itemMa: string, deptName: string) => {
@@ -178,29 +192,61 @@ export default function LinenStockSubscreen({
 
   // Stats computation
   const stats = useMemo(() => {
-    if (isWardUser) {
-      const wardItems = filteredItems.filter(d => {
-        const alloc = (detailAllocations[d.ma] || []).find(a => a[0] === selectedLocation);
-        return alloc && alloc[1] > 0;
-      });
-      const totalItems = wardItems.length;
-      const totalKC = wardItems.reduce((s, d) => s + d.kc, 0);
-      const totalKP = filteredItems.reduce((sum, d) => {
-        const alloc = (detailAllocations[d.ma] || []).find(a => a[0] === selectedLocation);
-        return sum + (alloc ? alloc[1] : 0);
-      }, 0);
-      return { totalItems, totalKC, totalKP, errCount: 0, warnCount: 0, okCount: 0 };
+    const totalItems = filteredItems.length;
+
+    if (focusDept) {
+      const totalKP = filteredItems.reduce((sum, d) => sum + getDeptAllocQty(d.ma, focusDept), 0);
+      const errCount = filteredItems.filter(d => getDeptAllocQty(d.ma, focusDept) === 0).length;
+      const warnCount = filteredItems.filter(d => {
+        const q = getDeptAllocQty(d.ma, focusDept);
+        return q > 0 && q <= d.mn;
+      }).length;
+      const okCount = totalItems - errCount - warnCount;
+
+      return {
+        totalItems,
+        totalKC: 0,
+        totalKP,
+        errCount,
+        warnCount,
+        okCount,
+        locationLabel: focusDept
+      };
     }
 
-    const totalItems = filteredItems.length;
+    if (selectedLocation === 'kho') {
+      const totalKC = filteredItems.reduce((s, d) => s + d.kc, 0);
+      const errCount = filteredItems.filter(d => d.kc === 0).length;
+      const warnCount = filteredItems.filter(d => d.kc > 0 && d.kc <= d.mn).length;
+      const okCount = totalItems - errCount - warnCount;
+
+      return {
+        totalItems,
+        totalKC,
+        totalKP: 0,
+        errCount,
+        warnCount,
+        okCount,
+        locationLabel: 'Kho Trung Tâm'
+      };
+    }
+
     const totalKC = filteredItems.reduce((s, d) => s + d.kc, 0);
     const totalKP = filteredItems.reduce((s, d) => s + d.kp, 0);
     const errCount = filteredItems.filter(d => d.status === 'err').length;
     const warnCount = filteredItems.filter(d => d.status === 'warn').length;
     const okCount = filteredItems.filter(d => d.status === 'ok').length;
 
-    return { totalItems, totalKC, totalKP, errCount, warnCount, okCount };
-  }, [filteredItems, isWardUser, selectedLocation, detailAllocations]);
+    return {
+      totalItems,
+      totalKC,
+      totalKP,
+      errCount,
+      warnCount,
+      okCount,
+      locationLabel: ''
+    };
+  }, [filteredItems, focusDept, selectedLocation, detailAllocations]);
 
   const handleExcelImportConfirm = (excelParsedData: { items: LinenItem[]; allocations: Record<string, [string, number][]> }, mode: 'overwrite' | 'merge') => {
     if (!onUpdateInventory) return;
@@ -326,7 +372,9 @@ export default function LinenStockSubscreen({
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-black/10 p-5 rounded-2xl shadow-xs">
         <div>
-          <h2 className="font-serif font-black text-2xl text-[#1A1A1A] tracking-tight">KHO ĐỒ VẢI QUY MÔ TOÀN VIỆN</h2>
+          <h2 className="font-serif font-black text-2xl text-[#1A1A1A] tracking-tight">
+            {focusDept ? `KHO ĐỒ VẢI - ${focusDept.toUpperCase()}` : selectedLocation === 'kho' ? 'KHO ĐỒ VẢI - KHO TRUNG TÂM' : 'KHO ĐỒ VẢI QUY MÔ TOÀN VIỆN'}
+          </h2>
         </div>
         <div className="flex flex-wrap gap-2.5">
           {canImportExcel && (
@@ -370,7 +418,7 @@ export default function LinenStockSubscreen({
       </div>
 
       {/* Bento Grid Stats */}
-      <LinenStockStats stats={stats} isWardUser={isWardUser} />
+      <LinenStockStats stats={stats} isWardUser={isWardUser} canSeeStockWarning={canSeeStockWarning} />
 
       {/* Filters bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 bg-white border border-black/10 p-4 rounded-2xl shadow-2xs">
@@ -424,7 +472,7 @@ export default function LinenStockSubscreen({
           </select>
         ) : (
           <div className="border border-black/10 bg-[#F5F2ED]/40 text-stone-700 rounded-xl px-3.5 py-2 text-xs font-bold flex items-center justify-between">
-            <span>Khoa giám sát: <b>{userDept}</b></span>
+            <span>Khoa: <b>{userDept}</b></span>
           </div>
         )}
       </div>
@@ -444,14 +492,14 @@ export default function LinenStockSubscreen({
                 {focusDept ? focusDept : 'Phân bổ Khoa'} {sortCol === 'kp' && (sortAsc ? '▲' : '▼')}
               </th>
               {!isWardUser && <th className="py-3 px-4 text-right cursor-pointer hover:bg-stone-200/50 transition-colors" onClick={() => handleSort('tong')}>Tổng tồn viện {sortCol === 'tong' && (sortAsc ? '▲' : '▼')}</th>}
-              {!isWardUser && <th className="py-3 px-4 text-center">Trạng thái an toàn</th>}
+              {canSeeStockWarning && !isWardUser && <th className="py-3 px-4 text-center">Trạng thái an toàn</th>}
               {isAdmin && <th className="py-3 px-4 text-center">Thao tác</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-black/5 font-medium">
             {filteredAndSortedItems.length === 0 ? (
               <tr>
-                <td colSpan={4 + (canSeeTrangBill ? 1 : 0) + (!isWardUser ? 4 : 0) + (isAdmin ? 1 : 0)} className="py-12 text-center text-[#8C8984] italic">
+                <td colSpan={4 + (canSeeTrangBill ? 1 : 0) + (!isWardUser ? 3 : 0) + (canSeeStockWarning && !isWardUser ? 1 : 0) + (isAdmin ? 1 : 0)} className="py-12 text-center text-[#8C8984] italic">
                   Không tìm thấy mặt hàng nào trùng khớp với bộ lọc hiện tại.
                 </td>
               </tr>
@@ -562,7 +610,7 @@ export default function LinenStockSubscreen({
                     )}
                   </td>
                   {!isWardUser && <td className="py-2.5 px-4 text-right font-bold font-mono">{d.tong.toLocaleString()}</td>}
-                  {!isWardUser && (
+                  {canSeeStockWarning && !isWardUser && (
                     <td className="py-2.5 px-4 text-center">
                       {d.status === 'ok' ? (
                         <span className="inline-block bg-[#D1FAE5] text-[#065F46] font-bold text-[9px] tracking-wider uppercase px-2.5 py-1">
@@ -620,31 +668,46 @@ export default function LinenStockSubscreen({
               <div key={d.ma} className="bg-white border border-black/10 rounded-2xl p-4 shadow-xs space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="font-mono font-black text-[#2563EB] text-sm">{d.ma}</span>
-                  {!isWardUser && (
+                  {canSeeStockWarning && !isWardUser && (
                     <span className={`inline-block font-bold text-[8px] tracking-wider uppercase px-2 py-0.5 rounded ${d.status === 'ok' ? 'bg-[#D1FAE5] text-[#065F46]' : d.status === 'warn' ? 'bg-[#FEF3C7] text-[#92400E]' : 'bg-[#FEE2E2] text-[#991B1B]'}`}>
                       {d.status === 'ok' ? '✔ Ổn định' : d.status === 'warn' ? '⚠ Tồn thấp' : '✕ Hết'}
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div onClick={() => setSelectedDetailItem(d)} className="relative w-12 h-12 rounded-lg overflow-hidden border border-black/10 bg-stone-100 flex-shrink-0 cursor-zoom-in">
-                    <img src={getLinenImage(d)} alt={d.ten} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => handleImageError(e, d)} />
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div onClick={() => setSelectedDetailItem(d)} className="relative w-12 h-12 rounded-lg overflow-hidden border border-black/10 bg-stone-100 flex-shrink-0 cursor-zoom-in">
+                      <img src={getLinenImage(d)} alt={d.ten} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => handleImageError(e, d)} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 onClick={() => setSelectedDetailItem(d)} className="font-bold text-stone-900 text-sm hover:text-blue-600 cursor-pointer">{d.ten}</h4>
+                      <span className="text-[#8C8984] text-[10px] uppercase font-semibold tracking-wider block">{d.nhom}</span>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 onClick={() => setSelectedDetailItem(d)} className="font-bold text-stone-900 text-sm hover:text-blue-600 cursor-pointer">{d.ten}</h4>
-                    <span className="text-[#8C8984] text-[10px] uppercase font-semibold tracking-wider block">{d.nhom}</span>
-                  </div>
+
+                  {isWardUser ? (
+                    <div className="bg-blue-50/80 border border-blue-100 px-3 py-1.5 rounded-xl text-right shrink-0">
+                      <span className="block text-[8px] font-bold text-blue-800 uppercase">Khoa phòng</span>
+                      <button onClick={() => onViewAllocations(d.ma, d.ten)} className="inline-flex items-center gap-1 text-[#2563EB] font-mono font-bold text-sm cursor-pointer">
+                        <MapPin size={11} />
+                        {focusDept ? deptQty.toLocaleString() : d.kp.toLocaleString()}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="bg-indigo-50/80 border border-indigo-100 px-3 py-1.5 rounded-xl text-right shrink-0">
+                      <span className="block text-[8px] font-bold text-indigo-800 uppercase">Tổng tồn</span>
+                      <span className="font-mono font-bold text-indigo-900 text-sm block">{d.tong.toLocaleString()}</span>
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-black/5 text-xs">
-                  {!isWardUser && (
+                {!isWardUser && (
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-black/5 text-xs">
                     <div className="bg-stone-50 p-2 rounded-xl">
                       <span className="block text-[8px] font-bold text-stone-400 uppercase">Kho chính</span>
                       <span className="font-mono font-bold text-stone-800">{d.kc.toLocaleString()}</span>
                     </div>
-                  )}
-                  {!isWardUser && (
                     <div className="bg-emerald-50/50 p-2 rounded-xl">
                       <span className="block text-[8px] font-bold text-emerald-800 uppercase">Kho tạm</span>
                       <span className="font-mono font-bold text-emerald-700">
@@ -656,21 +719,15 @@ export default function LinenStockSubscreen({
                         })()}
                       </span>
                     </div>
-                  )}
-                  <div className="bg-blue-50/40 p-2 rounded-xl">
-                    <span className="block text-[8px] font-bold text-blue-800 uppercase">Khoa phòng</span>
-                    <button onClick={() => onViewAllocations(d.ma, d.ten)} className="inline-flex items-center gap-1 text-[#2563EB] font-mono font-bold cursor-pointer">
-                      <MapPin size={10} />
-                      {focusDept ? deptQty.toLocaleString() : d.kp.toLocaleString()}
-                    </button>
-                  </div>
-                  {!isWardUser && (
-                    <div className="bg-indigo-50/50 p-2 rounded-xl">
-                      <span className="block text-[8px] font-bold text-indigo-800 uppercase">Tổng viện</span>
-                      <span className="font-mono font-bold text-indigo-900">{d.tong.toLocaleString()}</span>
+                    <div className="bg-blue-50/40 p-2 rounded-xl">
+                      <span className="block text-[8px] font-bold text-blue-800 uppercase">Khoa phòng</span>
+                      <button onClick={() => onViewAllocations(d.ma, d.ten)} className="inline-flex items-center gap-1 text-[#2563EB] font-mono font-bold cursor-pointer">
+                        <MapPin size={10} />
+                        {focusDept ? deptQty.toLocaleString() : d.kp.toLocaleString()}
+                      </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {isAdmin && (
                   <div className="flex justify-end gap-2 pt-2 border-t border-black/5">
@@ -749,6 +806,7 @@ export default function LinenStockSubscreen({
           selectedDetailItem={selectedDetailItem}
           getLinenImage={getLinenImage}
           isWardUser={isWardUser}
+          canManageCatalog={isAdmin}
           detailAllocations={detailAllocations}
           temporaryDirtyStore={temporaryDirtyStore}
           temporaryCompanyDirtyStore={temporaryCompanyDirtyStore}

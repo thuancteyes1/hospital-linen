@@ -19,6 +19,10 @@ Hệ thống có các nhóm vai trò chính: **Hộ lý (Orderly/Housekeeping)**
    - Duyệt hoặc click gửi trả đồ sạch từ công ty (Cty giặt) về kho sạch của bệnh viện (Mục 2/Mục 4: Công nợ xưởng công ty).
    - *Chỉ có tài khoản Xưởng giặt (Laundry) mới có quyền bấm khai báo / giao đồ vải sạch từ kho của công ty về kho sạch BV.*
 
+3. **Quyền Quản lý Danh mục, Sửa/Xóa & Thay hình ảnh Đồ vải:**
+   - Chỉ có duy nhất tài khoản **Quản trị viên (Admin)** và **Trưởng kho đồ vải** mới có quyền thêm mới, chỉnh sửa, xóa mặt hàng, thay đổi hình ảnh đại diện (tải ảnh/dán link) và cập nhật thông tin trong danh mục đồ vải.
+   - Nhân viên đồ vải thông thường (Kho sạch), Điều dưỡng, Hộ lý và Xưởng giặt tuyệt đối không có quyền thay hình ảnh hay chỉnh sửa/xóa mặt hàng đồ vải.
+
 ---
 
 ## 🛠️ 2. Quy tắc Triển khai Mã nguồn (Coding Implementation Rules)
