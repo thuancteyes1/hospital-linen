@@ -36,27 +36,35 @@ export const checkPermission = (
     return false;
   }
 
-  // Now check real account roles
-  if (isLaundryUser) {
-    return roleRequired === 'laundry';
+  // Now check real account roles when simulatedRole === 'all'
+
+  // 1. Action requires 'laundry' (Company Laundry action like declaring clean return bill step 4.1):
+  // Strictly FORBIDDEN for Hospital Linen Staff / Ward users / Housekeeping / Orderly unless explicitly a laundry user.
+  if (roleRequired === 'laundry') {
+    if (isLaundryUser) return true;
+    const roleLower = (currentRoleName || '').toLowerCase();
+    if (roleLower.includes('xưởng') || roleLower.includes('giặt') || roleLower.includes('công ty') || roleLower.includes('laundry')) {
+      return true;
+    }
+    return false;
   }
 
-  if (isOrderlyUser || isHousekeepingUser) {
-    return roleRequired === 'ward' || roleRequired === 'housekeeping';
+  // 2. Action requires 'ward' or 'housekeeping':
+  if (roleRequired === 'ward' || roleRequired === 'housekeeping') {
+    if (isOrderlyUser || isHousekeepingUser || effectiveIsWardUser) return true;
+    const roleLower = (currentRoleName || '').toLowerCase();
+    return roleLower.includes('hộ lý') || roleLower.includes('điều dưỡng') || roleLower.includes('khoa');
   }
 
-  if (
-    effectiveIsWardUser ||
-    (currentRoleName || '').toLowerCase().includes('hộ lý') ||
-    (currentRoleName || '').toLowerCase().includes('điều dưỡng')
-  ) {
-    return roleRequired === 'ward';
-  }
-
-  // Default to hasLinenPerm for general linen/clean actions, but prevent ward/laundry users
+  // 3. Action requires 'linen' or 'clean' (Hospital Central Linen / Clean store action):
   if (roleRequired === 'linen' || roleRequired === 'clean') {
-    return hasLinenPerm && !isLaundryUser && !isOrderlyUser && !isHousekeepingUser && !effectiveIsWardUser;
+    if (isLaundryUser || isOrderlyUser || isHousekeepingUser || effectiveIsWardUser) {
+      return false;
+    }
+    if (hasLinenPerm) return true;
+    const roleLower = (currentRoleName || '').toLowerCase();
+    return roleLower.includes('đồ vải') || roleLower.includes('kho sạch') || roleLower.includes('thủ kho') || roleLower.includes('quản trị');
   }
 
-  return true;
+  return false;
 };

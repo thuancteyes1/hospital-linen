@@ -306,9 +306,12 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
         let detailText = '';
         try {
           const parsed = JSON.parse(text);
-          if (parsed.details) detailText = `: ${parsed.details}`;
+          if (parsed.details && typeof parsed.details === 'string') {
+            const cleanStr = parsed.details.replace(/\s+/g, ' ').trim();
+            detailText = cleanStr.length > 80 ? `: ${cleanStr.slice(0, 80)}...` : `: ${cleanStr}`;
+          }
         } catch (_) {}
-        triggerToast(`⚠️ Đồng bộ máy chủ thất bại${detailText} (Kiểm tra kết nối DB Neon)`, '#EF4444');
+        triggerToast(`⚠️ Đồng bộ máy chủ thất bại${detailText}`, '#EF4444');
       } else {
         const data = await res.json();
         if (data.isLocalOnly) {

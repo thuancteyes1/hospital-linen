@@ -301,7 +301,9 @@ app.post('/api/sync', async (req, res) => {
   }
 
   console.error('All sync attempts failed:', lastError);
-  res.status(500).json({ error: 'Đồng bộ cơ sở dữ liệu thất bại', details: lastError?.message || 'Lỗi kết nối cơ sở dữ liệu Neon' });
+  const rawDetails = lastError?.message || 'Lỗi kết nối cơ sở dữ liệu';
+  const cleanDetails = typeof rawDetails === 'string' ? rawDetails.slice(0, 100) : 'Lỗi hệ thống';
+  res.status(500).json({ error: 'Đồng bộ cơ sở dữ liệu thất bại', details: cleanDetails });
 });
 
 // REST Endpoint: Force Database Reset/Re-seed
