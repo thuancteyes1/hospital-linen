@@ -12,13 +12,11 @@ import authRouter, { getUsersData, syncUsersData } from './routes/auth.ts';
 import inventoryRouter, { getInventoryData, syncInventoryData } from './routes/inventory.ts';
 import deliveryRouter, { getDeliveryData, syncDeliveryData } from './routes/delivery.ts';
 import reportsRouter, { getReportsData, syncReportsData } from './routes/reports.ts';
-import { updateInMemoryStore } from './routes/serverStore.ts';
 
 // Initialize dotenv
 dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'hosplinen-secure-super-secret-key-2026';
-
 
 
 
@@ -265,53 +263,21 @@ app.get('/api/init', async (req, res) => {
 // Sync complete master state in a single payload
 app.post('/api/sync', async (req, res) => {
   try {
-    const { 
-      items, 
-      detailAllocations, 
-      users: reqUsers, 
-      accounts, 
-      history: reqHistory, 
-      wardDeliverySlips, 
-      laundryDispatches: reqDispatches,
-      temporaryCleanStore,
-      temporaryDirtyStore,
-      temporaryCompanyDirtyStore
-    } = req.body;
+    const { items, detailAllocations, users: reqUsers, accounts, history: reqHistory, wardDeliverySlips, laundryDispatches: reqDispatches } = req.body;
 
-    // 1. Update in-memory store synchronously
-    updateInMemoryStore(req.body);
+    await db.transaction(async (tx) => {
+      // 1. Sync inventory data
+      await syncInventoryData(tx, items, detailAllocations);
 
-    // 2. Sync to PostgreSQL if DB is configured
-    if (isDbConfigured()) {
-      try {
-        await db.transaction(async (tx) => {
-          await syncInventoryData(tx, items, detailAllocations);
-          await syncUsersData(tx, accounts, reqUsers);
-          await syncDeliveryData(
-            tx, 
-            wardDeliverySlips, 
-            reqDispatches, 
-            temporaryCleanStore, 
-            temporaryDirtyStore, 
-            temporaryCompanyDirtyStore
-          );
-          await syncReportsData(tx, reqHistory);
-        });
-      } catch (dbErr: any) {
-        console.error('PostgreSQL sync FAILED - change was NOT saved:', dbErr.message || dbErr);
-        return res.status(500).json({
-          success: false,
-          error: 'Lưu vào cơ sở dữ liệu đám mây thất bại. Thay đổi CHƯA được lưu, vui lòng thử lại.',
-          details: dbErr.message || String(dbErr)
-        });
-      }
-    } else {
-      console.error('DATABASE_URL not configured - change not persisted!');
-      return res.status(500).json({
-        success: false,
-        error: 'Cơ sở dữ liệu chưa được cấu hình. Thay đổi CHƯA được lưu vĩnh viễn.'
-      });
-    }
+      // 2. Sync Users / Accounts
+      await syncUsersData(tx, accounts, reqUsers);
+
+      // 3. Sync Delivery Slips & Laundry Dispatches
+      await syncDeliveryData(tx, wardDeliverySlips, reqDispatches);
+
+      // 4. Sync history transactions logs
+      await syncReportsData(tx, reqHistory);
+    });
 
     res.json({ success: true, message: 'Database state synchronized perfectly' });
   } catch (err: any) {

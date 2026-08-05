@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { db, isDbConfigured } from '../src/db/index.ts';
 import { linenItems, deptAllocations } from '../src/db/schema.ts';
-import { inMemoryStore, updateInMemoryStore } from './serverStore.ts';
 
 const router = Router();
 
@@ -16,57 +15,57 @@ router.get('/', async (req, res) => {
 });
 
 export async function getInventoryData() {
-  if (isDbConfigured()) {
-    try {
-      const dbItems = await db.select().from(linenItems);
-      const dbAllocations = await db.select().from(deptAllocations);
-
-      // Map department allocations into Record<string, [string, number][]>
-      const detailAllocationsRecord: Record<string, [string, number][]> = {};
-      dbAllocations.forEach((alloc) => {
-        if (!detailAllocationsRecord[alloc.itemMa]) {
-          detailAllocationsRecord[alloc.itemMa] = [];
-        }
-        detailAllocationsRecord[alloc.itemMa].push([alloc.dept, alloc.qty]);
-      });
-
-      // Reconstruct items with custom kp
-      const itemsList = dbItems.map((item) => {
-        const kpSum = (detailAllocationsRecord[item.ma] || []).reduce((sum, r) => sum + r[1], 0);
-        return {
-          ma: item.ma,
-          ten: item.ten,
-          nhom: item.nhom,
-          kc: item.kc,
-          kp: kpSum,
-          mn: item.mn,
-          hinhAnh: item.hinhAnh || undefined,
-          trang: item.trang || 'Trang 1'
-        };
-      });
-
-      inMemoryStore.items = itemsList;
-      inMemoryStore.detailAllocations = detailAllocationsRecord;
-
-      return {
-        items: itemsList,
-        detailAllocations: detailAllocationsRecord
-      };
-    } catch (err) {
-      console.warn('PostgreSQL query failed in getInventoryData, falling back to inMemoryStore:', err);
-    }
+  if (!isDbConfigured()) {
+    const { INITIAL_LINEN_ITEMS, INITIAL_DETAIL_ALLOCATIONS } = await import('../src/data.ts');
+    return {
+      items: INITIAL_LINEN_ITEMS,
+      detailAllocations: INITIAL_DETAIL_ALLOCATIONS
+    };
   }
+  try {
+    const dbItems = await db.select().from(linenItems);
+    const dbAllocations = await db.select().from(deptAllocations);
 
-  return {
-    items: inMemoryStore.items,
-    detailAllocations: inMemoryStore.detailAllocations
-  };
+    // Map department allocations into Record<string, [string, number][]>
+    const detailAllocationsRecord: Record<string, [string, number][]> = {};
+    dbAllocations.forEach((alloc) => {
+      if (!detailAllocationsRecord[alloc.itemMa]) {
+        detailAllocationsRecord[alloc.itemMa] = [];
+      }
+      detailAllocationsRecord[alloc.itemMa].push([alloc.dept, alloc.qty]);
+    });
+
+    // Reconstruct items with custom kp
+    const itemsList = dbItems.map((item) => {
+      const kpSum = (detailAllocationsRecord[item.ma] || []).reduce((sum, r) => sum + r[1], 0);
+      return {
+        ma: item.ma,
+        ten: item.ten,
+        nhom: item.nhom,
+        kc: item.kc,
+        kp: kpSum,
+        mn: item.mn,
+        hinhAnh: item.hinhAnh || undefined,
+        trang: item.trang || 'Trang 1'
+      };
+    });
+
+    return {
+      items: itemsList,
+      detailAllocations: detailAllocationsRecord
+    };
+  } catch (err) {
+    console.warn('PostgreSQL query failed in getInventoryData, falling back to static data:', err);
+    const { INITIAL_LINEN_ITEMS, INITIAL_DETAIL_ALLOCATIONS } = await import('../src/data.ts');
+    return {
+      items: INITIAL_LINEN_ITEMS,
+      detailAllocations: INITIAL_DETAIL_ALLOCATIONS
+    };
+  }
 }
 
 export async function syncInventoryData(tx: any, items: any[], detailAllocations: any) {
-  updateInMemoryStore({ items, detailAllocations });
-
-  if (tx && items) {
+  if (items) {
     await tx.delete(deptAllocations);
     await tx.delete(linenItems);
 

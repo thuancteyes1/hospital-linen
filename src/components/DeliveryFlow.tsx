@@ -113,7 +113,7 @@ export default function DeliveryFlow({
   const effectiveIsLaundryUser = isLaundryUser || simulatedRole === 'laundry';
   const isOrderlyUser = simulatedRole === 'orderly' || currentRoleName === 'Hộ lý';
   const isHousekeepingUser = simulatedRole === 'housekeeping' || currentRoleName === 'Buồng phòng';
- const hasLinenPerm = currentRoleName === 'Nhân viên đồ vải' || currentRoleName === 'Trưởng kho đồ vải' || simulatedRole === 'linen' || simulatedRole === 'clean' || currentAccount?.isAdmin === true;
+  const hasLinenPerm = currentRoleName === 'Nhân viên Đồ vải' || simulatedRole === 'linen' || currentAccount?.isAdmin === true;
 
   // Primary Tab layout: 1 = Giao nhận dơ khoa phòng, 2 = Giao nhận với Cty, 3 = Giao nhận sạch khoa phòng, 4 = Đối chiếu & Nợ
   const [activeMucState, setActiveMucState] = useState<1 | 2 | 3 | 4>(1);

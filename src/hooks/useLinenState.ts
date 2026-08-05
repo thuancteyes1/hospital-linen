@@ -81,9 +81,6 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
         setHistory(data.history);
         setWardDeliverySlips(data.wardDeliverySlips);
         setLaundryDispatches(data.laundryDispatches);
-        if (data.temporaryCleanStore) setTemporaryCleanStore(data.temporaryCleanStore);
-        if (data.temporaryDirtyStore) setTemporaryDirtyStore(data.temporaryDirtyStore);
-        if (data.temporaryCompanyDirtyStore) setTemporaryCompanyDirtyStore(data.temporaryCompanyDirtyStore);
         
         let loadedDepts = DEPARTMENTS;
         try {
@@ -154,55 +151,6 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
       }
     }
     initData();
-  }, []);
-
-  // Real-time synchronization polling across Mobile and PC
-  useEffect(() => {
-    const syncWithServer = async () => {
-      try {
-        const res = await fetch('/api/init');
-        if (!res.ok) return;
-        const data = await res.json();
-
-        if (data.items) setItems(data.items);
-        if (data.detailAllocations) setDetailAllocations(data.detailAllocations);
-        if (data.users && Array.isArray(data.users)) {
-          setUsers(data.users);
-          setDepartments(prevDepts => {
-            const userDepts = data.users.map((u: any) => u.dept).filter(Boolean);
-            const merged = Array.from(new Set([...prevDepts, ...userDepts]));
-            return merged;
-          });
-        }
-        if (data.accounts) setAccounts(data.accounts);
-        if (data.history) setHistory(data.history);
-        if (data.wardDeliverySlips) setWardDeliverySlips(data.wardDeliverySlips);
-        if (data.laundryDispatches) setLaundryDispatches(data.laundryDispatches);
-        if (data.temporaryCleanStore) setTemporaryCleanStore(data.temporaryCleanStore);
-        if (data.temporaryDirtyStore) setTemporaryDirtyStore(data.temporaryDirtyStore);
-        if (data.temporaryCompanyDirtyStore) setTemporaryCompanyDirtyStore(data.temporaryCompanyDirtyStore);
-      } catch (_) {
-        // Silent catch for background sync blips
-      }
-    };
-
-    // Auto-poll every 5 seconds
-    const interval = setInterval(syncWithServer, 5000);
-
-    const handleFocus = () => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-        syncWithServer();
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleFocus);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleFocus);
-    };
   }, []);
 
   useEffect(() => {
@@ -336,7 +284,7 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
     };
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
 
-    // Async sync state to PostgreSQL & Server State
+    // Async sync state to PostgreSQL
     fetch('/api/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -348,22 +296,17 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
         accounts: newAccounts,
         history: newHistory,
         wardDeliverySlips: newWardSlips,
-        laundryDispatches: newLaundryDispatches,
-        temporaryCleanStore: newTempStore,
-        temporaryDirtyStore: newTempDirtyStore,
-        temporaryCompanyDirtyStore: newTempCompanyDirtyStore
+        laundryDispatches: newLaundryDispatches
       })
     })
-   .then(async (res) => {
+    .then(async (res) => {
       if (!res.ok) {
         const text = await res.text();
         console.error('Failed to sync to postgres:', text);
-        triggerToast('❌ LƯU THẤT BẠI! Thay đổi CHƯA lên máy chủ, chỉ có ở máy này. Vui lòng thử lại.', '#DC2626');
       }
     })
     .catch((err) => {
       console.error('Error during postgres sync:', err);
-      triggerToast('❌ Mất kết nối khi lưu! Thay đổi CHƯA được lưu lên máy chủ.', '#DC2626');
     });
   };
 

@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { db, isDbConfigured } from '../src/db/index.ts';
 import { deliverySlips, laundryDispatches } from '../src/db/schema.ts';
-import { inMemoryStore, computeTempDirtyStoreFromSlips, updateInMemoryStore } from './serverStore.ts';
 
 const router = Router();
 
@@ -16,68 +15,47 @@ router.get('/', async (req, res) => {
 });
 
 export async function getDeliveryData() {
-  let slipsList: any[] = inMemoryStore.wardDeliverySlips;
-  let dispatchesList: any[] = inMemoryStore.laundryDispatches;
-
-  if (isDbConfigured()) {
-    try {
-      const dbSlips = await db.select().from(deliverySlips);
-      const dbDispatches = await db.select().from(laundryDispatches);
-
-      // Map slips
-      slipsList = dbSlips.map((s) => ({
-        ...s,
-        items: JSON.parse(s.items)
-      }));
-
-      // Map dispatches
-      dispatchesList = dbDispatches.map((d) => ({
-        ...d,
-        linkedSlipIds: JSON.parse(d.linkedSlipIds),
-        items: JSON.parse(d.items)
-      }));
-
-      inMemoryStore.wardDeliverySlips = slipsList;
-      inMemoryStore.laundryDispatches = dispatchesList;
-    } catch (err) {
-      console.warn('PostgreSQL query failed in getDeliveryData, falling back to inMemoryStore:', err);
-      slipsList = inMemoryStore.wardDeliverySlips;
-      dispatchesList = inMemoryStore.laundryDispatches;
-    }
+  if (!isDbConfigured()) {
+    const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data.ts');
+    return {
+      wardDeliverySlips: INITIAL_WARD_DELIVERY_SLIPS,
+      laundryDispatches: INITIAL_LAUNDRY_DISPATCHES
+    };
   }
+  try {
+    const dbSlips = await db.select().from(deliverySlips);
+    const dbDispatches = await db.select().from(laundryDispatches);
 
-  // Calculate dirty store if empty
-  const dirtyStoreToReturn = Object.keys(inMemoryStore.temporaryDirtyStore).length > 0
-    ? inMemoryStore.temporaryDirtyStore
-    : computeTempDirtyStoreFromSlips(slipsList);
+    // Map slips
+    const slipsList = dbSlips.map((s) => ({
+      ...s,
+      items: JSON.parse(s.items)
+    }));
 
-  return {
-    wardDeliverySlips: slipsList,
-    laundryDispatches: dispatchesList,
-    temporaryCleanStore: inMemoryStore.temporaryCleanStore,
-    temporaryDirtyStore: dirtyStoreToReturn,
-    temporaryCompanyDirtyStore: inMemoryStore.temporaryCompanyDirtyStore
-  };
+    // Map dispatches
+    const dispatchesList = dbDispatches.map((d) => ({
+      ...d,
+      linkedSlipIds: JSON.parse(d.linkedSlipIds),
+      items: JSON.parse(d.items)
+    }));
+
+    return {
+      wardDeliverySlips: slipsList,
+      laundryDispatches: dispatchesList
+    };
+  } catch (err) {
+    console.warn('PostgreSQL query failed in getDeliveryData, falling back to static data:', err);
+    const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data.ts');
+    return {
+      wardDeliverySlips: INITIAL_WARD_DELIVERY_SLIPS,
+      laundryDispatches: INITIAL_LAUNDRY_DISPATCHES
+    };
+  }
 }
 
-export async function syncDeliveryData(
-  tx: any, 
-  wardDeliverySlips: any[], 
-  reqDispatches: any[],
-  temporaryCleanStore?: Record<string, number>,
-  temporaryDirtyStore?: Record<string, number>,
-  temporaryCompanyDirtyStore?: Record<string, number>
-) {
-  updateInMemoryStore({
-    wardDeliverySlips,
-    laundryDispatches: reqDispatches,
-    temporaryCleanStore,
-    temporaryDirtyStore,
-    temporaryCompanyDirtyStore
-  });
-
-  // Sync Delivery Slips to DB if tx is present
-  if (tx && wardDeliverySlips) {
+export async function syncDeliveryData(tx: any, wardDeliverySlips: any[], reqDispatches: any[]) {
+  // Sync Delivery Slips
+  if (wardDeliverySlips) {
     await tx.delete(deliverySlips);
     const slipsToInsert = wardDeliverySlips.map((slip: any) => ({
       id: slip.id,
@@ -111,8 +89,8 @@ export async function syncDeliveryData(
     }
   }
 
-  // Sync Laundry Dispatches to DB if tx is present
-  if (tx && reqDispatches) {
+  // Sync Laundry Dispatches
+  if (reqDispatches) {
     await tx.delete(laundryDispatches);
     const dispatchesToInsert = reqDispatches.map((ld: any) => ({
       id: ld.id,
