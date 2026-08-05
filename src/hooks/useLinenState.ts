@@ -166,7 +166,14 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
 
         if (data.items) setItems(data.items);
         if (data.detailAllocations) setDetailAllocations(data.detailAllocations);
-        if (data.users) setUsers(data.users);
+        if (data.users && Array.isArray(data.users)) {
+          setUsers(data.users);
+          setDepartments(prevDepts => {
+            const userDepts = data.users.map((u: any) => u.dept).filter(Boolean);
+            const merged = Array.from(new Set([...prevDepts, ...userDepts]));
+            return merged;
+          });
+        }
         if (data.accounts) setAccounts(data.accounts);
         if (data.history) setHistory(data.history);
         if (data.wardDeliverySlips) setWardDeliverySlips(data.wardDeliverySlips);
