@@ -292,7 +292,7 @@ app.post('/api/sync', async (req, res) => {
       return res.json({ success: true, message: 'Đã đồng bộ cơ sở dữ liệu thành công.' });
     } catch (err: any) {
       lastError = err;
-      console.warn(`Sync attempt ${attempt}/${maxAttempts} failed:`, err?.message || err);
+      console.error(`Sync attempt ${attempt}/${maxAttempts} error:`, err);
       if (attempt < maxAttempts) {
         // Delay 800ms before retrying to allow Neon DB wake-up or connection recovery
         await new Promise((resolve) => setTimeout(resolve, 800));
@@ -301,9 +301,8 @@ app.post('/api/sync', async (req, res) => {
   }
 
   console.error('All sync attempts failed:', lastError);
-  const rawDetails = lastError?.message || 'Lỗi kết nối cơ sở dữ liệu';
-  const cleanDetails = typeof rawDetails === 'string' ? rawDetails.slice(0, 100) : 'Lỗi hệ thống';
-  res.status(500).json({ error: 'Đồng bộ cơ sở dữ liệu thất bại', details: cleanDetails });
+  const rawDetails = lastError?.cause?.message || lastError?.message || String(lastError);
+  res.status(500).json({ error: 'Đồng bộ cơ sở dữ liệu thất bại', details: rawDetails });
 });
 
 // REST Endpoint: Force Database Reset/Re-seed

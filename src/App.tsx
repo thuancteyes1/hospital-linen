@@ -329,7 +329,7 @@ export default function App() {
                 onExportBackup={handleExportBackup}
                 onInitTest={handleInitTestStock}
                 onViewAllocations={(ma, ten) => setAllocationModal({ ma, ten })}
-                onUpdateInventory={(newItems, newDetail) => saveAllStates(newItems, newDetail, roles, users, accounts, history, pendingRegs, departments, wardDeliverySlips, laundryDispatches, temporaryCleanStore)}
+                onUpdateInventory={(newItems, newDetail) => saveAllStates(newItems, newDetail, roles, users, accounts, history, pendingRegs, departments, wardDeliverySlips, laundryDispatches, temporaryCleanStore, temporaryDirtyStore, temporaryCompanyDirtyStore)}
                 isAdmin={canManageCatalog}
                 canExportReport={canSeeReport}
                 canSeeTrangBill={canSeeTrangBill}

@@ -81,6 +81,9 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
         setHistory(data.history);
         setWardDeliverySlips(data.wardDeliverySlips);
         setLaundryDispatches(data.laundryDispatches);
+        if (data.temporaryCleanStore) setTemporaryCleanStore(data.temporaryCleanStore);
+        if (data.temporaryDirtyStore) setTemporaryDirtyStore(data.temporaryDirtyStore);
+        if (data.temporaryCompanyDirtyStore) setTemporaryCompanyDirtyStore(data.temporaryCompanyDirtyStore);
         
         let loadedDepts = DEPARTMENTS;
         try {
@@ -111,6 +114,9 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
           s12History: data.history,
           wardDeliverySlips: data.wardDeliverySlips,
           laundryDispatches: data.laundryDispatches,
+          temporaryCleanStore: data.temporaryCleanStore || {},
+          temporaryDirtyStore: data.temporaryDirtyStore || {},
+          temporaryCompanyDirtyStore: data.temporaryCompanyDirtyStore || {},
           DEPARTMENTS: cleanDepts,
           updatedAt: new Date().toISOString()
         };
@@ -129,6 +135,9 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
             if (Array.isArray(parsed.s12History)) setHistory(parsed.s12History);
             if (Array.isArray(parsed.wardDeliverySlips)) setWardDeliverySlips(parsed.wardDeliverySlips);
             if (Array.isArray(parsed.laundryDispatches)) setLaundryDispatches(parsed.laundryDispatches);
+            if (parsed.temporaryCleanStore) setTemporaryCleanStore(parsed.temporaryCleanStore);
+            if (parsed.temporaryDirtyStore) setTemporaryDirtyStore(parsed.temporaryDirtyStore);
+            if (parsed.temporaryCompanyDirtyStore) setTemporaryCompanyDirtyStore(parsed.temporaryCompanyDirtyStore);
             if (Array.isArray(parsed.DEPARTMENTS) && parsed.DEPARTMENTS.length > 0) {
               loadedDepts = parsed.DEPARTMENTS;
             }
@@ -296,7 +305,10 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
         accounts: newAccounts,
         history: newHistory,
         wardDeliverySlips: newWardSlips,
-        laundryDispatches: newLaundryDispatches
+        laundryDispatches: newLaundryDispatches,
+        temporaryCleanStore: newTempStore,
+        temporaryDirtyStore: newTempDirtyStore,
+        temporaryCompanyDirtyStore: newTempCompanyDirtyStore
       })
     })
     .then(async (res) => {
