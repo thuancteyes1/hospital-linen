@@ -267,7 +267,7 @@ app.post('/api/sync', async (req, res) => {
     return res.json({ success: true, isLocalOnly: true, message: 'Dữ liệu đã được lưu an toàn tại bộ nhớ trình duyệt.' });
   }
 
-  const { items, detailAllocations, users: reqUsers, accounts, history: reqHistory, wardDeliverySlips, laundryDispatches: reqDispatches } = req.body;
+  const { items, detailAllocations, users: reqUsers, accounts, history: reqHistory, wardDeliverySlips, laundryDispatches: reqDispatches, temporaryCleanStore, temporaryDirtyStore, temporaryCompanyDirtyStore } = req.body;
 
   let lastError: any = null;
   const maxAttempts = 3;
@@ -277,7 +277,7 @@ app.post('/api/sync', async (req, res) => {
       await ensureTablesExist();
       await db.transaction(async (tx) => {
         // 1. Sync inventory data
-        await syncInventoryData(tx, items, detailAllocations);
+        await syncInventoryData(tx, items, detailAllocations, temporaryCleanStore, temporaryDirtyStore, temporaryCompanyDirtyStore);
 
         // 2. Sync Users / Accounts
         await syncUsersData(tx, accounts, reqUsers);
