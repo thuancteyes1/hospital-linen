@@ -316,14 +316,13 @@ export async function syncUsersData(tx: any, accounts: any[], reqUsers: any[]) {
 
       let passwordHash = passwordHashMap.get(lowerEmail) || null;
 
-      if (acc.password) {
+      if (!passwordHash || (acc.password && !acc.password.startsWith('$2a$') && !acc.password.startsWith('$2b$') && acc.password !== '123456')) {
+        const passToHash = acc.password || '123456';
         try {
-          passwordHash = bcrypt.hashSync(acc.password, 10);
+          passwordHash = bcrypt.hashSync(passToHash, 10);
         } catch (e) {
           passwordHash = bcrypt.hashSync('123456', 10);
         }
-      } else if (!passwordHash) {
-        passwordHash = bcrypt.hashSync('123456', 10);
       }
 
       usersToInsert.push({

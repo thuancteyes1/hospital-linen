@@ -284,7 +284,7 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
     };
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
 
-    // Async sync state to PostgreSQL
+    // Async sync state to PostgreSQL / Neon DB
     fetch('/api/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -303,10 +303,19 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
       if (!res.ok) {
         const text = await res.text();
         console.error('Failed to sync to postgres:', text);
+        triggerToast('⚠️ Đồng bộ máy chủ thất bại! (Kiểm tra kết nối DB Neon)', '#EF4444');
+      } else {
+        const data = await res.json();
+        if (data.isLocalOnly) {
+          triggerToast('💾 Dữ liệu đã lưu tại trình duyệt (Chưa kết nối DB đám mây Neon)', '#F59E0B');
+        } else {
+          triggerToast('☁️ Đã cập nhật và đồng bộ dữ liệu lên cơ sở dữ liệu (Neon DB)', '#10B981');
+        }
       }
     })
     .catch((err) => {
       console.error('Error during postgres sync:', err);
+      triggerToast('⚠️ Không thể kết nối tới máy chủ đồng bộ đám mây', '#EF4444');
     });
   };
 
