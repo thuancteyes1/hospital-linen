@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { db, isDbConfigured } from '../src/db/index.ts';
-import { deliverySlips, laundryDispatches } from '../src/db/schema.ts';
+import { db, isDbConfigured } from '../src/db/index';
+import { deliverySlips, laundryDispatches } from '../src/db/schema';
 
 const router = Router();
 
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 
 export async function getDeliveryData() {
   if (!isDbConfigured()) {
-    const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data.ts');
+    const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data');
     return {
       wardDeliverySlips: INITIAL_WARD_DELIVERY_SLIPS,
       laundryDispatches: INITIAL_LAUNDRY_DISPATCHES
@@ -45,7 +45,7 @@ export async function getDeliveryData() {
     };
   } catch (err) {
     console.warn('PostgreSQL query failed in getDeliveryData, falling back to static data:', err);
-    const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data.ts');
+    const { INITIAL_WARD_DELIVERY_SLIPS, INITIAL_LAUNDRY_DISPATCHES } = await import('../src/data');
     return {
       wardDeliverySlips: INITIAL_WARD_DELIVERY_SLIPS,
       laundryDispatches: INITIAL_LAUNDRY_DISPATCHES
@@ -55,67 +55,89 @@ export async function getDeliveryData() {
 
 export async function syncDeliveryData(tx: any, wardDeliverySlips: any[], reqDispatches: any[]) {
   // Sync Delivery Slips
-  if (wardDeliverySlips) {
+  if (wardDeliverySlips && Array.isArray(wardDeliverySlips)) {
     await tx.delete(deliverySlips);
-    const slipsToInsert = wardDeliverySlips.map((slip: any) => ({
-      id: slip.id,
-      dept: slip.dept,
-      createdAt: slip.createdAt,
-      createdBy: slip.createdBy,
-      originalSlipId: slip.originalSlipId || null,
-      originalCreatedAt: slip.originalCreatedAt || null,
-      receiver: slip.receiver || null,
-      status: slip.status,
-      confirmedAt: slip.confirmedAt || null,
-      confirmedBy: slip.confirmedBy || null,
-      laundryDispatchId: slip.laundryDispatchId || null,
-      laundryReceivedBy: slip.laundryReceivedBy || null,
-      laundryReceivedAt: slip.laundryReceivedAt || null,
-      laundryReturnedBy: slip.laundryReturnedBy || null,
-      laundryReturnedAt: slip.laundryReturnedAt || null,
-      hospitalCleanBy: slip.hospitalCleanBy || null,
-      hospitalCleanAt: slip.hospitalCleanAt || null,
-      verifiedDirtyBy: slip.verifiedDirtyBy || null,
-      verifiedDirtyAt: slip.verifiedDirtyAt || null,
-      isGuestSlip: slip.isGuestSlip || false,
-      isRewash: slip.isRewash || false,
-      attachedImage: slip.attachedImage || null,
-      guestName: slip.guestName || null,
-      guestRoom: slip.guestRoom || null,
-      items: JSON.stringify(slip.items)
-    }));
+    const seenSlipIds = new Set<string>();
+    const slipsToInsert = [];
+
+    for (const slip of wardDeliverySlips) {
+      if (!slip || !slip.id) continue;
+      const sId = String(slip.id).trim();
+      if (seenSlipIds.has(sId)) continue;
+      seenSlipIds.add(sId);
+
+      slipsToInsert.push({
+        id: sId,
+        dept: slip.dept || 'N/A',
+        createdAt: slip.createdAt || new Date().toISOString(),
+        createdBy: slip.createdBy || 'Hệ thống',
+        originalSlipId: slip.originalSlipId || null,
+        originalCreatedAt: slip.originalCreatedAt || null,
+        receiver: slip.receiver || null,
+        status: slip.status || 'pending',
+        confirmedAt: slip.confirmedAt || null,
+        confirmedBy: slip.confirmedBy || null,
+        laundryDispatchId: slip.laundryDispatchId || null,
+        laundryReceivedBy: slip.laundryReceivedBy || null,
+        laundryReceivedAt: slip.laundryReceivedAt || null,
+        laundryReturnedBy: slip.laundryReturnedBy || null,
+        laundryReturnedAt: slip.laundryReturnedAt || null,
+        hospitalCleanBy: slip.hospitalCleanBy || null,
+        hospitalCleanAt: slip.hospitalCleanAt || null,
+        verifiedDirtyBy: slip.verifiedDirtyBy || null,
+        verifiedDirtyAt: slip.verifiedDirtyAt || null,
+        isGuestSlip: Boolean(slip.isGuestSlip),
+        isRewash: Boolean(slip.isRewash),
+        attachedImage: slip.attachedImage || null,
+        guestName: slip.guestName || null,
+        guestRoom: slip.guestRoom || null,
+        items: JSON.stringify(slip.items || [])
+      });
+    }
+
     if (slipsToInsert.length > 0) {
       await tx.insert(deliverySlips).values(slipsToInsert);
     }
   }
 
   // Sync Laundry Dispatches
-  if (reqDispatches) {
+  if (reqDispatches && Array.isArray(reqDispatches)) {
     await tx.delete(laundryDispatches);
-    const dispatchesToInsert = reqDispatches.map((ld: any) => ({
-      id: ld.id,
-      createdAt: ld.createdAt,
-      originalDispatchId: ld.originalDispatchId || null,
-      originalCreatedAt: ld.originalCreatedAt || null,
-      contractor: ld.contractor,
-      driver: ld.driver,
-      plate: ld.plate,
-      status: ld.status,
-      laundryReceivedAt: ld.laundryReceivedAt || null,
-      laundryReceivedBy: ld.laundryReceivedBy || null,
-      cleanReturnedAt: ld.cleanReturnedAt || null,
-      cleanReturnedBy: ld.cleanReturnedBy || null,
-      hospitalVerifiedAt: ld.hospitalVerifiedAt || null,
-      hospitalVerifiedBy: ld.hospitalVerifiedBy || null,
-      linkedSlipIds: JSON.stringify(ld.linkedSlipIds),
-      isGuestBill: ld.isGuestBill || false,
-      attachedImage: ld.attachedImage || null,
-      guestName: ld.guestName || null,
-      guestRoom: ld.guestRoom || null,
-      dept: ld.dept || null,
-      items: JSON.stringify(ld.items),
-      lossNote: ld.lossNote || null
-    }));
+    const seenDispatchIds = new Set<string>();
+    const dispatchesToInsert = [];
+
+    for (const ld of reqDispatches) {
+      if (!ld || !ld.id) continue;
+      const dId = String(ld.id).trim();
+      if (seenDispatchIds.has(dId)) continue;
+      seenDispatchIds.add(dId);
+
+      dispatchesToInsert.push({
+        id: dId,
+        createdAt: ld.createdAt || new Date().toISOString(),
+        originalDispatchId: ld.originalDispatchId || null,
+        originalCreatedAt: ld.originalCreatedAt || null,
+        contractor: ld.contractor || 'Cty Giặt',
+        driver: ld.driver || 'N/A',
+        plate: ld.plate || 'N/A',
+        status: ld.status || 'pending_laundry',
+        laundryReceivedAt: ld.laundryReceivedAt || null,
+        laundryReceivedBy: ld.laundryReceivedBy || null,
+        cleanReturnedAt: ld.cleanReturnedAt || null,
+        cleanReturnedBy: ld.cleanReturnedBy || null,
+        hospitalVerifiedAt: ld.hospitalVerifiedAt || null,
+        hospitalVerifiedBy: ld.hospitalVerifiedBy || null,
+        linkedSlipIds: JSON.stringify(ld.linkedSlipIds || []),
+        isGuestBill: Boolean(ld.isGuestBill),
+        attachedImage: ld.attachedImage || null,
+        guestName: ld.guestName || null,
+        guestRoom: ld.guestRoom || null,
+        dept: ld.dept || null,
+        items: JSON.stringify(ld.items || []),
+        lossNote: ld.lossNote || null
+      });
+    }
+
     if (dispatchesToInsert.length > 0) {
       await tx.insert(laundryDispatches).values(dispatchesToInsert);
     }

@@ -4,14 +4,14 @@ import { createServer as createViteServer } from 'vite';
 import * as dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { db, isDbConfigured } from './src/db/index.ts';
-import { users, linenItems, deptAllocations, deliverySlips, laundryDispatches, history } from './src/db/schema.ts';
+import { db, isDbConfigured } from './src/db/index';
+import { users, linenItems, deptAllocations, deliverySlips, laundryDispatches, history } from './src/db/schema';
 import { eq, or } from 'drizzle-orm';
 
-import authRouter, { getUsersData, syncUsersData } from './routes/auth.ts';
-import inventoryRouter, { getInventoryData, syncInventoryData } from './routes/inventory.ts';
-import deliveryRouter, { getDeliveryData, syncDeliveryData } from './routes/delivery.ts';
-import reportsRouter, { getReportsData, syncReportsData } from './routes/reports.ts';
+import authRouter, { getUsersData, syncUsersData } from './routes/auth';
+import inventoryRouter, { getInventoryData, syncInventoryData } from './routes/inventory';
+import deliveryRouter, { getDeliveryData, syncDeliveryData } from './routes/delivery';
+import reportsRouter, { getReportsData, syncReportsData } from './routes/reports';
 
 // Initialize dotenv
 dotenv.config();
@@ -48,7 +48,7 @@ async function seedDatabaseIfEmpty() {
       INITIAL_ACCOUNTS,
       INITIAL_WARD_DELIVERY_SLIPS,
       INITIAL_LAUNDRY_DISPATCHES
-    } = await import('./src/data.ts');
+    } = await import('./src/data');
 
     await db.transaction(async (tx) => {
       // 1. Seed Linen Items
@@ -172,7 +172,7 @@ async function healUserPasswords() {
   }
   try {
     let dbUsers = await db.select().from(users);
-    const { INITIAL_ACCOUNTS, INITIAL_USERS } = await import('./src/data.ts');
+    const { INITIAL_ACCOUNTS, INITIAL_USERS } = await import('./src/data');
     
     let addedCount = 0;
     for (const acc of INITIAL_ACCOUNTS) {
@@ -262,6 +262,10 @@ app.get('/api/init', async (req, res) => {
 
 // Sync complete master state in a single payload
 app.post('/api/sync', async (req, res) => {
+  if (!isDbConfigured()) {
+    return res.json({ success: true, isLocalOnly: true, message: 'Dữ liệu đã được lưu an toàn tại bộ nhớ trình duyệt.' });
+  }
+
   try {
     const { items, detailAllocations, users: reqUsers, accounts, history: reqHistory, wardDeliverySlips, laundryDispatches: reqDispatches } = req.body;
 
@@ -279,10 +283,10 @@ app.post('/api/sync', async (req, res) => {
       await syncReportsData(tx, reqHistory);
     });
 
-    res.json({ success: true, message: 'Database state synchronized perfectly' });
+    res.json({ success: true, message: 'Đã đồng bộ cơ sở dữ liệu thành công.' });
   } catch (err: any) {
     console.error('Error during synchronization:', err);
-    res.status(500).json({ error: 'Failed to sync state to database', details: err.message });
+    res.status(500).json({ error: 'Đồng bộ cơ sở dữ liệu thất bại', details: err.message });
   }
 });
 

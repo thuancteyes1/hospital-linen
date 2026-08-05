@@ -1,12 +1,12 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
-import * as schema from './schema.ts';
+import * as schema from './schema';
 
 const { Pool } = pg;
 
 export const isDbConfigured = (): boolean => {
   const dbUrl = process.env.DATABASE_URL;
-  if (dbUrl && (dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://'))) {
+  if (dbUrl && (dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://') || dbUrl.includes('neon') || dbUrl.includes('supabase'))) {
     return true;
   }
   if (process.env.SQL_HOST && process.env.SQL_USER) {
@@ -18,14 +18,18 @@ export const isDbConfigured = (): boolean => {
 // Function to create a new connection pool.
 export const createPool = () => {
   const dbUrl = process.env.DATABASE_URL;
-  const isPostgresUrl = dbUrl && (dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://'));
+  const isPostgresUrl = dbUrl && (
+    dbUrl.startsWith('postgres://') || 
+    dbUrl.startsWith('postgresql://') || 
+    dbUrl.includes('neon') || 
+    dbUrl.includes('supabase')
+  );
+
   if (isPostgresUrl) {
     return new Pool({
       connectionString: dbUrl,
       connectionTimeoutMillis: 5000,
-      ssl: dbUrl.includes('supabase') || dbUrl.includes('neon.tech')
-        ? { rejectUnauthorized: false }
-        : undefined,
+      ssl: { rejectUnauthorized: false },
     });
   }
   if (process.env.SQL_HOST && process.env.SQL_USER) {

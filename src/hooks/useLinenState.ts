@@ -667,38 +667,37 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
 
   // Approve pending Xuất Kho & Điều Chuyển & Thu hồi
   const handleConfirmXuat = (id: string, currentAccount: Account | null) => {
+    let nextItems = [...items];
+    let nextDetail = { ...detailAllocations };
+
     const nextHistory = history.map(h => {
       if (h.id === id && (h.type === 'xuat' || h.type === 'dc' || h.type === 'thuhoi') && h.status === 'pending_dept' && !h.movementApplied) {
-        // Apply changes now
-        const nextItems = [...items];
-        const nextDetail = { ...detailAllocations };
-
         h.items.forEach(({ ma, qty }) => {
           if (h.type === 'xuat') {
             // Deduct Main store, add to Department allocation
             const itemIdx = nextItems.findIndex(i => i.ma === ma);
             if (itemIdx >= 0) {
-              nextItems[itemIdx].kc = Math.max(0, nextItems[itemIdx].kc - qty);
+              nextItems[itemIdx] = { ...nextItems[itemIdx], kc: Math.max(0, nextItems[itemIdx].kc - qty) };
             }
 
-            const depts = nextDetail[ma] || [];
+            const depts = nextDetail[ma] ? [...nextDetail[ma]] : [];
             const dIdx = depts.findIndex(d => d[0] === h.to);
             if (dIdx >= 0) {
-              depts[dIdx][1] += qty;
+              depts[dIdx] = [h.to, depts[dIdx][1] + qty];
             } else {
               depts.push([h.to, qty]);
             }
             nextDetail[ma] = depts.filter(d => d[1] > 0);
           } else if (h.type === 'dc') {
             // Move from department A (h.from) to department B (h.to)
-            const depts = nextDetail[ma] || [];
+            const depts = nextDetail[ma] ? [...nextDetail[ma]] : [];
             const sourceIdx = depts.findIndex(d => d[0] === h.from);
             if (sourceIdx >= 0) {
-              depts[sourceIdx][1] = Math.max(0, depts[sourceIdx][1] - qty);
+              depts[sourceIdx] = [h.from, Math.max(0, depts[sourceIdx][1] - qty)];
             }
             const targetIdx = depts.findIndex(d => d[0] === h.to);
             if (targetIdx >= 0) {
-              depts[targetIdx][1] += qty;
+              depts[targetIdx] = [h.to, depts[targetIdx][1] + qty];
             } else {
               depts.push([h.to, qty]);
             }
@@ -707,21 +706,17 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
             // Deduct from department allocation, add to Main store
             const itemIdx = nextItems.findIndex(i => i.ma === ma);
             if (itemIdx >= 0) {
-              nextItems[itemIdx].kc += qty;
+              nextItems[itemIdx] = { ...nextItems[itemIdx], kc: nextItems[itemIdx].kc + qty };
             }
 
-            const depts = nextDetail[ma] || [];
+            const depts = nextDetail[ma] ? [...nextDetail[ma]] : [];
             const dIdx = depts.findIndex(d => d[0] === h.from);
             if (dIdx >= 0) {
-              depts[dIdx][1] = Math.max(0, depts[dIdx][1] - qty);
+              depts[dIdx] = [h.from, Math.max(0, depts[dIdx][1] - qty)];
             }
             nextDetail[ma] = depts.filter(d => d[1] > 0);
           }
         });
-
-        setTimeout(() => {
-          saveAllStates(nextItems, nextDetail, roles, users, accounts, nextHistory, pendingRegs);
-        }, 0);
 
         return {
           ...h,
@@ -734,7 +729,7 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
       return h;
     });
 
-    setHistory(nextHistory);
+    saveAllStates(nextItems, nextDetail, roles, users, accounts, nextHistory, pendingRegs);
     triggerToast(`Đã nhận bàn giao phiếu ${id} — Tồn kho đã cập nhật.`);
   };
 

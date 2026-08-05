@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { db, isDbConfigured } from '../src/db/index.ts';
-import { users } from '../src/db/schema.ts';
+import { db, isDbConfigured } from '../src/db/index';
+import { users } from '../src/db/schema';
 import { eq, or } from 'drizzle-orm';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getAuth as getAdminAuth } from 'firebase-admin/auth';
@@ -100,7 +100,7 @@ router.post('/login', async (req, res) => {
 
     // Fallback if DB is not connected or user was not found in DB
     if (!user) {
-      const { INITIAL_ACCOUNTS, INITIAL_USERS } = await import('../src/data.ts');
+      const { INITIAL_ACCOUNTS, INITIAL_USERS } = await import('../src/data');
       const target = username.trim().toLowerCase();
       const matchedAcc = INITIAL_ACCOUNTS.find(acc => 
         acc.username.toLowerCase() === target || 
@@ -234,7 +234,7 @@ router.post('/verify-token', async (req, res) => {
 
 export async function getUsersData() {
   if (!isDbConfigured()) {
-    const { INITIAL_ACCOUNTS, INITIAL_USERS } = await import('../src/data.ts');
+    const { INITIAL_ACCOUNTS, INITIAL_USERS } = await import('../src/data');
     return {
       users: INITIAL_USERS,
       accounts: INITIAL_ACCOUNTS
@@ -267,7 +267,7 @@ export async function getUsersData() {
     };
   } catch (err) {
     console.warn('PostgreSQL query failed in getUsersData, using initial static data:', err);
-    const { INITIAL_ACCOUNTS, INITIAL_USERS } = await import('../src/data.ts');
+    const { INITIAL_ACCOUNTS, INITIAL_USERS } = await import('../src/data');
     return {
       users: INITIAL_USERS,
       accounts: INITIAL_ACCOUNTS
@@ -276,7 +276,7 @@ export async function getUsersData() {
 }
 
 export async function syncUsersData(tx: any, accounts: any[], reqUsers: any[]) {
-  if (accounts) {
+  if (accounts && Array.isArray(accounts)) {
     // Fetch existing users to preserve their password hashes
     const existingDbUsers = await tx.select().from(users);
     const passwordHashMap = new Map<string, string>();
@@ -288,29 +288,56 @@ export async function syncUsersData(tx: any, accounts: any[], reqUsers: any[]) {
 
     await tx.delete(users);
     const usersToInsert = [];
-    for (const acc of accounts) {
-      const matchingUser = reqUsers ? reqUsers.find((u: any) => u.email === acc.email) : null;
-      let passwordHash = passwordHashMap.get(acc.email.toLowerCase()) || null;
+    const seenEmails = new Set<string>();
+    const seenUids = new Set<string>();
 
-      // If a new password is provided, hash it. Otherwise preserve current hash,
-      // or fallback to hashing '123456' for seeded/initial accounts.
+    for (const acc of accounts) {
+      if (!acc || !acc.email) continue;
+      const lowerEmail = acc.email.toLowerCase().trim();
+      if (seenEmails.has(lowerEmail)) continue;
+
+      const rawUsername = acc.username || acc.email.split('@')[0] || 'user';
+      const rawUid = rawUsername && !rawUsername.startsWith('mock:') && rawUsername !== 'Admin' && rawUsername.includes('-')
+        ? rawUsername
+        : `mock:${rawUsername}`;
+
+      let finalUid = rawUid;
+      let counter = 1;
+      while (seenUids.has(finalUid)) {
+        finalUid = `${rawUid}_${counter++}`;
+      }
+
+      seenEmails.add(lowerEmail);
+      seenUids.add(finalUid);
+
+      const matchingUser = reqUsers && Array.isArray(reqUsers)
+        ? reqUsers.find((u: any) => u && u.email && u.email.toLowerCase().trim() === lowerEmail)
+        : null;
+
+      let passwordHash = passwordHashMap.get(lowerEmail) || null;
+
       if (acc.password) {
-        passwordHash = bcrypt.hashSync(acc.password, 10);
+        try {
+          passwordHash = bcrypt.hashSync(acc.password, 10);
+        } catch (e) {
+          passwordHash = bcrypt.hashSync('123456', 10);
+        }
       } else if (!passwordHash) {
         passwordHash = bcrypt.hashSync('123456', 10);
       }
 
       usersToInsert.push({
-        uid: acc.username && !acc.username.startsWith('mock:') && acc.username !== 'Admin' && acc.username.includes('-') ? acc.username : `mock:${acc.username || 'user'}`,
-        email: acc.email,
-        name: acc.name,
+        uid: finalUid,
+        email: lowerEmail,
+        name: acc.name || lowerEmail.split('@')[0] || 'Hospital User',
         role: matchingUser ? matchingUser.role : (acc.isAdmin ? 0 : 2),
         dept: matchingUser ? matchingUser.dept : 'NICU',
         status: acc.status || 'active',
-        isAdmin: acc.isAdmin || false,
+        isAdmin: Boolean(acc.isAdmin),
         passwordHash
       });
     }
+
     if (usersToInsert.length > 0) {
       await tx.insert(users).values(usersToInsert);
     }

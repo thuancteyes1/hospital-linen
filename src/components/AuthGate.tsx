@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { Account, PendingRegistration } from '../types';
 import { Shirt, Eye, EyeOff, Check, Clock } from 'lucide-react';
-import { auth, googleAuthProvider, signInWithPopup } from '../lib/firebase.ts';
+import { auth, googleAuthProvider, signInWithPopup } from '../lib/firebase';
 
 interface AuthGateProps {
   accounts: Account[];
