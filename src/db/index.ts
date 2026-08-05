@@ -101,8 +101,15 @@ export async function ensureTablesExist() {
           mn INTEGER NOT NULL DEFAULT 20,
           hinh_anh TEXT,
           trang TEXT DEFAULT 'Trang 1',
-          created_at TIMESTAMP DEFAULT NOW()
+          created_at TIMESTAMP DEFAULT NOW(),
+          temp_clean INTEGER NOT NULL DEFAULT 0,
+          temp_dirty INTEGER NOT NULL DEFAULT 0,
+          temp_company_dirty INTEGER NOT NULL DEFAULT 0
         );
+
+        ALTER TABLE linen_items ADD COLUMN IF NOT EXISTS temp_clean INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE linen_items ADD COLUMN IF NOT EXISTS temp_dirty INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE linen_items ADD COLUMN IF NOT EXISTS temp_company_dirty INTEGER NOT NULL DEFAULT 0;
 
         CREATE TABLE IF NOT EXISTS dept_allocations (
           id SERIAL PRIMARY KEY,

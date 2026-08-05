@@ -4,19 +4,11 @@ import jwt from 'jsonwebtoken';
 import { db, isDbConfigured } from '../src/db/index';
 import { users } from '../src/db/schema';
 import { eq, or } from 'drizzle-orm';
-import { initializeApp, getApps } from 'firebase-admin/app';
-import { getAuth as getAdminAuth } from 'firebase-admin/auth';
-import firebaseConfig from '../firebase-applet-config.json';
+
 
 const JWT_SECRET = process.env.JWT_SECRET || 'hosplinen-secure-super-secret-key-2026';
 
-// Initialize Firebase Admin
-if (!getApps().length) {
-  initializeApp({
-    projectId: firebaseConfig.projectId,
-  });
-}
-const adminAuth = getAdminAuth();
+
 
 const router = Router();
 

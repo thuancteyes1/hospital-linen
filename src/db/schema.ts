@@ -21,9 +21,12 @@ export const linenItems = pgTable('linen_items', {
   nhom: text('nhom').notNull(), // Group name
   kc: integer('kc').notNull().default(0), // Central stock (Tồn kho chính)
   mn: integer('mn').notNull().default(20), // Minimum limit
-  hinhAnh: text('hinh_anh'),
+   hinhAnh: text('hinh_anh'),
   trang: text('trang').default('Trang 1'),
-  createdAt: timestamp('created_at').defaultNow()
+  createdAt: timestamp('created_at').defaultNow(),
+  tempClean: integer('temp_clean').notNull().default(0),
+  tempDirty: integer('temp_dirty').notNull().default(0),
+  tempCompanyDirty: integer('temp_company_dirty').notNull().default(0),
 });
 
 // Detailed allocations per department
