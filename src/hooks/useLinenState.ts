@@ -354,14 +354,16 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
         temporaryCompanyDirtyStore: newTempCompanyDirtyStore
       })
     })
-    .then(async (res) => {
+   .then(async (res) => {
       if (!res.ok) {
         const text = await res.text();
         console.error('Failed to sync to postgres:', text);
+        triggerToast('❌ LƯU THẤT BẠI! Thay đổi CHƯA lên máy chủ, chỉ có ở máy này. Vui lòng thử lại.', '#DC2626');
       }
     })
     .catch((err) => {
       console.error('Error during postgres sync:', err);
+      triggerToast('❌ Mất kết nối khi lưu! Thay đổi CHƯA được lưu lên máy chủ.', '#DC2626');
     });
   };
 

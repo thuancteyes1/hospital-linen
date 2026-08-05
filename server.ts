@@ -298,8 +298,19 @@ app.post('/api/sync', async (req, res) => {
           await syncReportsData(tx, reqHistory);
         });
       } catch (dbErr: any) {
-        console.warn('PostgreSQL sync failed, but state updated in memory:', dbErr.message || dbErr);
+        console.error('PostgreSQL sync FAILED - change was NOT saved:', dbErr.message || dbErr);
+        return res.status(500).json({
+          success: false,
+          error: 'Lưu vào cơ sở dữ liệu đám mây thất bại. Thay đổi CHƯA được lưu, vui lòng thử lại.',
+          details: dbErr.message || String(dbErr)
+        });
       }
+    } else {
+      console.error('DATABASE_URL not configured - change not persisted!');
+      return res.status(500).json({
+        success: false,
+        error: 'Cơ sở dữ liệu chưa được cấu hình. Thay đổi CHƯA được lưu vĩnh viễn.'
+      });
     }
 
     res.json({ success: true, message: 'Database state synchronized perfectly' });
