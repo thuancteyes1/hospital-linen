@@ -276,27 +276,31 @@ export async function getUsersData() {
 }
 
 export async function syncUsersData(tx: any, accounts: any[], reqUsers: any[]) {
-  if (accounts && Array.isArray(accounts)) {
+  if ((accounts && Array.isArray(accounts)) || (reqUsers && Array.isArray(reqUsers))) {
     // Fetch existing users to preserve their password hashes
     const existingDbUsers = await tx.select().from(users);
     const passwordHashMap = new Map<string, string>();
-    existingDbUsers.forEach((u) => {
+    existingDbUsers.forEach((u: any) => {
       if (u.email && u.passwordHash) {
         passwordHashMap.set(u.email.toLowerCase(), u.passwordHash);
       }
     });
 
     await tx.delete(users);
-    const usersToInsert = [];
+    const usersToInsert: any[] = [];
     const seenEmails = new Set<string>();
     const seenUids = new Set<string>();
 
-    for (const acc of accounts) {
-      if (!acc || !acc.email) continue;
-      const lowerEmail = acc.email.toLowerCase().trim();
-      if (seenEmails.has(lowerEmail)) continue;
+    const safeAccounts = Array.isArray(accounts) ? accounts : [];
+    const safeUsers = Array.isArray(reqUsers) ? reqUsers : [];
 
-      const rawUsername = acc.username || acc.email.split('@')[0] || 'user';
+    // 1. Process accounts
+    for (const acc of safeAccounts) {
+      if (!acc || !acc.email) continue;
+      const lowerEmail = String(acc.email).toLowerCase().trim();
+      if (!lowerEmail || seenEmails.has(lowerEmail)) continue;
+
+      const rawUsername = acc.username || lowerEmail.split('@')[0] || 'user';
       const rawUid = rawUsername && !rawUsername.startsWith('mock:') && rawUsername !== 'Admin' && rawUsername.includes('-')
         ? rawUsername
         : `mock:${rawUsername}`;
@@ -310,9 +314,7 @@ export async function syncUsersData(tx: any, accounts: any[], reqUsers: any[]) {
       seenEmails.add(lowerEmail);
       seenUids.add(finalUid);
 
-      const matchingUser = reqUsers && Array.isArray(reqUsers)
-        ? reqUsers.find((u: any) => u && u.email && u.email.toLowerCase().trim() === lowerEmail)
-        : null;
+      const matchingUser = safeUsers.find((u: any) => u && u.email && String(u.email).toLowerCase().trim() === lowerEmail);
 
       let passwordHash = passwordHashMap.get(lowerEmail) || null;
 
@@ -328,11 +330,43 @@ export async function syncUsersData(tx: any, accounts: any[], reqUsers: any[]) {
       usersToInsert.push({
         uid: finalUid,
         email: lowerEmail,
-        name: acc.name || lowerEmail.split('@')[0] || 'Hospital User',
+        name: acc.name || (matchingUser ? matchingUser.name : lowerEmail.split('@')[0]),
         role: matchingUser ? matchingUser.role : (acc.isAdmin ? 0 : 2),
-        dept: matchingUser ? matchingUser.dept : 'NICU',
-        status: acc.status || 'active',
+        dept: matchingUser ? matchingUser.dept : (acc.dept || 'Kho trung tâm'),
+        status: acc.status || (matchingUser ? matchingUser.status : 'active'),
         isAdmin: Boolean(acc.isAdmin),
+        passwordHash
+      });
+    }
+
+    // 2. Process any reqUsers that were not present in accounts
+    for (const u of safeUsers) {
+      if (!u || !u.email) continue;
+      const lowerEmail = String(u.email).toLowerCase().trim();
+      if (!lowerEmail || seenEmails.has(lowerEmail)) continue;
+
+      const rawUsername = lowerEmail.split('@')[0] || 'user';
+      const rawUid = `mock:${rawUsername}`;
+
+      let finalUid = rawUid;
+      let counter = 1;
+      while (seenUids.has(finalUid)) {
+        finalUid = `${rawUid}_${counter++}`;
+      }
+
+      seenEmails.add(lowerEmail);
+      seenUids.add(finalUid);
+
+      let passwordHash = passwordHashMap.get(lowerEmail) || bcrypt.hashSync('123456', 10);
+
+      usersToInsert.push({
+        uid: finalUid,
+        email: lowerEmail,
+        name: u.name || rawUsername,
+        role: typeof u.role === 'number' ? u.role : 2,
+        dept: u.dept || 'Kho trung tâm',
+        status: u.status || 'active',
+        isAdmin: Boolean(u.role === 0),
         passwordHash
       });
     }

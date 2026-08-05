@@ -303,7 +303,12 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
       if (!res.ok) {
         const text = await res.text();
         console.error('Failed to sync to postgres:', text);
-        triggerToast('⚠️ Đồng bộ máy chủ thất bại! (Kiểm tra kết nối DB Neon)', '#EF4444');
+        let detailText = '';
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed.details) detailText = `: ${parsed.details}`;
+        } catch (_) {}
+        triggerToast(`⚠️ Đồng bộ máy chủ thất bại${detailText} (Kiểm tra kết nối DB Neon)`, '#EF4444');
       } else {
         const data = await res.json();
         if (data.isLocalOnly) {

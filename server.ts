@@ -4,7 +4,7 @@ import { createServer as createViteServer } from 'vite';
 import * as dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { db, isDbConfigured } from './src/db/index';
+import { db, isDbConfigured, ensureTablesExist } from './src/db/index';
 import { users, linenItems, deptAllocations, deliverySlips, laundryDispatches, history } from './src/db/schema';
 import { eq, or } from 'drizzle-orm';
 
@@ -243,6 +243,7 @@ app.use('/api/reports', reportsRouter);
 // Consolidation endpoint to fetch entire system state
 app.get('/api/init', async (req, res) => {
   try {
+    await ensureTablesExist();
     const inventoryData = await getInventoryData();
     const usersData = await getUsersData();
     const deliveryData = await getDeliveryData();
@@ -260,34 +261,47 @@ app.get('/api/init', async (req, res) => {
   }
 });
 
-// Sync complete master state in a single payload
+// Sync complete master state in a single payload with automatic retry for Neon DB cold starts
 app.post('/api/sync', async (req, res) => {
   if (!isDbConfigured()) {
     return res.json({ success: true, isLocalOnly: true, message: 'Dữ liệu đã được lưu an toàn tại bộ nhớ trình duyệt.' });
   }
 
-  try {
-    const { items, detailAllocations, users: reqUsers, accounts, history: reqHistory, wardDeliverySlips, laundryDispatches: reqDispatches } = req.body;
+  const { items, detailAllocations, users: reqUsers, accounts, history: reqHistory, wardDeliverySlips, laundryDispatches: reqDispatches } = req.body;
 
-    await db.transaction(async (tx) => {
-      // 1. Sync inventory data
-      await syncInventoryData(tx, items, detailAllocations);
+  let lastError: any = null;
+  const maxAttempts = 3;
 
-      // 2. Sync Users / Accounts
-      await syncUsersData(tx, accounts, reqUsers);
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await ensureTablesExist();
+      await db.transaction(async (tx) => {
+        // 1. Sync inventory data
+        await syncInventoryData(tx, items, detailAllocations);
 
-      // 3. Sync Delivery Slips & Laundry Dispatches
-      await syncDeliveryData(tx, wardDeliverySlips, reqDispatches);
+        // 2. Sync Users / Accounts
+        await syncUsersData(tx, accounts, reqUsers);
 
-      // 4. Sync history transactions logs
-      await syncReportsData(tx, reqHistory);
-    });
+        // 3. Sync Delivery Slips & Laundry Dispatches
+        await syncDeliveryData(tx, wardDeliverySlips, reqDispatches);
 
-    res.json({ success: true, message: 'Đã đồng bộ cơ sở dữ liệu thành công.' });
-  } catch (err: any) {
-    console.error('Error during synchronization:', err);
-    res.status(500).json({ error: 'Đồng bộ cơ sở dữ liệu thất bại', details: err.message });
+        // 4. Sync history transactions logs
+        await syncReportsData(tx, reqHistory);
+      });
+
+      return res.json({ success: true, message: 'Đã đồng bộ cơ sở dữ liệu thành công.' });
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`Sync attempt ${attempt}/${maxAttempts} failed:`, err?.message || err);
+      if (attempt < maxAttempts) {
+        // Delay 800ms before retrying to allow Neon DB wake-up or connection recovery
+        await new Promise((resolve) => setTimeout(resolve, 800));
+      }
+    }
   }
+
+  console.error('All sync attempts failed:', lastError);
+  res.status(500).json({ error: 'Đồng bộ cơ sở dữ liệu thất bại', details: lastError?.message || 'Lỗi kết nối cơ sở dữ liệu Neon' });
 });
 
 // REST Endpoint: Force Database Reset/Re-seed
