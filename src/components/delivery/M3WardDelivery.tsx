@@ -801,34 +801,40 @@ export default function M3WardDelivery({
                       Kho đồ vải đã bàn giao sạch lúc <b>{activeSlip.hospitalCleanAt}</b> (Người giao: <b>{activeSlip.hospitalCleanBy}</b>, Dự kiến người nhận: <b>{activeSlip.receiver}</b>).
                     </p>
 
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 border-t border-amber-200">
-                      <div className="flex-1">
-                        <label className="text-[10px] text-amber-900 font-bold uppercase block mb-1">Tên điều dưỡng / người nhận tại khoa:</label>
-                        <input
-                          type="text"
-                          value={wardReceiverName}
-                          onChange={e => setWardReceiverName(e.target.value)}
-                          placeholder={activeSlip.receiver || "Nhập tên người nhận tại khoa..."}
-                          className="w-full h-9 border border-amber-300 rounded-lg px-3 text-xs font-bold text-stone-800 bg-white focus:ring-1 focus:ring-amber-500"
-                        />
+                    {(effectiveIsWardUser || isOrderlyUser) || currentAccount?.isAdmin ? (
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 border-t border-amber-200">
+                        <div className="flex-1">
+                          <label className="text-[10px] text-amber-900 font-bold uppercase block mb-1">Tên điều dưỡng / người nhận tại khoa:</label>
+                          <input
+                            type="text"
+                            value={wardReceiverName}
+                            onChange={e => setWardReceiverName(e.target.value)}
+                            placeholder={activeSlip.receiver || "Nhập tên người nhận tại khoa..."}
+                            className="w-full h-9 border border-amber-300 rounded-lg px-3 text-xs font-bold text-stone-800 bg-white focus:ring-1 focus:ring-amber-500"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 pt-1 sm:pt-4">
+                          <button
+                            type="button"
+                            onClick={() => handleWardConfirmCleanReceipt(activeSlip.id)}
+                            className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <CheckCircle2 size={16} /> Khoa Phòng Xác Nhận Nhận
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openWardRejectModal(activeSlip.id)}
+                            className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <X size={16} /> Từ Chối (Hoàn Trả Kho Sạch Tạm)
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 pt-1 sm:pt-4">
-                        <button
-                          type="button"
-                          onClick={() => handleWardConfirmCleanReceipt(activeSlip.id)}
-                          className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <CheckCircle2 size={16} /> Khoa Phòng Xác Nhận Nhận
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openWardRejectModal(activeSlip.id)}
-                          className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <X size={16} /> Từ Chối (Hoàn Trả Kho Sạch Tạm)
-                        </button>
+                    ) : (
+                      <div className="p-3 bg-amber-100 border border-amber-300 rounded-lg text-amber-800 text-xs font-medium text-center">
+                        ⏳ Chỉ tài khoản Điều dưỡng/Hộ lý của Khoa {activeSlip.dept} mới có quyền xác nhận hoặc từ chối nhận đồ sạch tại đây.
                       </div>
-                    </div>
+                    )}
                   </div>
                 ) : isLinenOrCleanUser ? (
                   <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3 shadow-xs">
