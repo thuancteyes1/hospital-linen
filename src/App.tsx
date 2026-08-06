@@ -81,7 +81,9 @@ export default function App() {
     handleInitTestStock,
     handleGenerateReportTestData,
     handleClearReportTestData,
-    hasSimulatedData
+    hasSimulatedData,
+    isRefreshing,
+    refetchData
   } = useLinenState(triggerToast);
 
   const {
@@ -361,6 +363,8 @@ export default function App() {
             {activeTab.startsWith('s21') && (
               canSeeLinenDelivery ? (
                 <DeliveryFlow
+                  onRefetchData={refetchData}
+                  isRefreshing={isRefreshing}
                   items={items}
                   detailAllocations={detailAllocations}
                   currentAccount={effectiveAccount || currentAccount}

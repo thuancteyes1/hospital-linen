@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { LinenItem, Role, User, Account, HistoryItem, PendingRegistration, DEPARTMENTS, WardDeliverySlip, LaundryDispatch } from '../types';
 import {
   INITIAL_LINEN_ITEMS,
@@ -65,63 +65,80 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
     };
   }, [triggerToast]);
 
-  // --- 1) STATE SYNCHRONIZATION AND INITIALIZATION ---
-  useEffect(() => {
-    async function initData() {
-      try {
-        setIsLoading(true);
-        const res = await fetch('/api/init');
-        if (!res.ok) throw new Error('API initialization failed');
-        const data = await res.json();
-        
-        setItems(data.items);
-        setDetailAllocations(data.detailAllocations);
-        setUsers(data.users);
-        setAccounts(data.accounts);
-        setHistory(data.history);
-        setWardDeliverySlips(data.wardDeliverySlips);
-        setLaundryDispatches(data.laundryDispatches);
-        if (data.temporaryCleanStore) setTemporaryCleanStore(data.temporaryCleanStore);
-        if (data.temporaryDirtyStore) setTemporaryDirtyStore(data.temporaryDirtyStore);
-        if (data.temporaryCompanyDirtyStore) setTemporaryCompanyDirtyStore(data.temporaryCompanyDirtyStore);
-        
-        let loadedDepts = DEPARTMENTS;
-        try {
-          const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed.DEPARTMENTS) && parsed.DEPARTMENTS.length > 0) {
-              loadedDepts = parsed.DEPARTMENTS;
-            }
-          }
-        } catch (_) {}
+  // --- REAL-TIME DATA REFRESH & POLLING LOGIC ---
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const prevSlipsCountRef = useRef<number | null>(null);
 
-        // Normalize and remove obsolete aliases like 'KKB SPK VIP'
-        const cleanDepts = Array.from(new Set(loadedDepts.map(d => d === 'KKB SPK VIP' ? 'KKB sản phụ khoa VIP' : d)));
-        if (!cleanDepts.includes("Khách")) {
-          cleanDepts.push("Khách", "Khách (VIP/Khoa ngoài)");
+  const fetchLatestData = useCallback(async (isSilent = false) => {
+    try {
+      if (!isSilent) setIsLoading(true);
+      else setIsRefreshing(true);
+
+      const res = await fetch('/api/init');
+      if (!res.ok) throw new Error('API initialization failed');
+      const data = await res.json();
+      
+      if (Array.isArray(data.items)) setItems(data.items);
+      if (data.detailAllocations) setDetailAllocations(data.detailAllocations);
+      if (Array.isArray(data.users)) setUsers(data.users);
+      if (Array.isArray(data.accounts)) setAccounts(data.accounts);
+      if (Array.isArray(data.history)) setHistory(data.history);
+
+      if (Array.isArray(data.wardDeliverySlips)) {
+        if (prevSlipsCountRef.current !== null && data.wardDeliverySlips.length > prevSlipsCountRef.current) {
+          const diff = data.wardDeliverySlips.length - prevSlipsCountRef.current;
+          triggerToast(`🔔 Có ${diff} phiếu giao nhận mới vừa được tạo từ Khoa phòng!`, '#2563EB');
         }
-        setDepartments(cleanDepts);
-        setRoles(INITIAL_ROLES);
-        
-        // Cache in local storage for offline tolerance
-        const payload = {
-          DV: data.items,
-          DETAIL: data.detailAllocations,
-          ROLES: INITIAL_ROLES,
-          USERS: data.users,
-          ACCOUNTS: data.accounts,
-          s12History: data.history,
-          wardDeliverySlips: data.wardDeliverySlips,
-          laundryDispatches: data.laundryDispatches,
-          temporaryCleanStore: data.temporaryCleanStore || {},
-          temporaryDirtyStore: data.temporaryDirtyStore || {},
-          temporaryCompanyDirtyStore: data.temporaryCompanyDirtyStore || {},
-          DEPARTMENTS: cleanDepts,
-          updatedAt: new Date().toISOString()
-        };
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
-      } catch (e) {
+        prevSlipsCountRef.current = data.wardDeliverySlips.length;
+        setWardDeliverySlips(data.wardDeliverySlips);
+      }
+
+      if (Array.isArray(data.laundryDispatches)) {
+        setLaundryDispatches(data.laundryDispatches);
+      }
+
+      if (data.temporaryCleanStore) setTemporaryCleanStore(data.temporaryCleanStore);
+      if (data.temporaryDirtyStore) setTemporaryDirtyStore(data.temporaryDirtyStore);
+      if (data.temporaryCompanyDirtyStore) setTemporaryCompanyDirtyStore(data.temporaryCompanyDirtyStore);
+      
+      let loadedDepts = DEPARTMENTS;
+      try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed.DEPARTMENTS) && parsed.DEPARTMENTS.length > 0) {
+            loadedDepts = parsed.DEPARTMENTS;
+          }
+        }
+      } catch (_) {}
+
+      // Normalize and remove obsolete aliases like 'KKB SPK VIP'
+      const cleanDepts = Array.from(new Set(loadedDepts.map(d => d === 'KKB SPK VIP' ? 'KKB sản phụ khoa VIP' : d)));
+      if (!cleanDepts.includes("Khách")) {
+        cleanDepts.push("Khách", "Khách (VIP/Khoa ngoài)");
+      }
+      setDepartments(cleanDepts);
+      setRoles(INITIAL_ROLES);
+      
+      // Cache in local storage for offline tolerance
+      const payload = {
+        DV: data.items,
+        DETAIL: data.detailAllocations,
+        ROLES: INITIAL_ROLES,
+        USERS: data.users,
+        ACCOUNTS: data.accounts,
+        s12History: data.history,
+        wardDeliverySlips: data.wardDeliverySlips,
+        laundryDispatches: data.laundryDispatches,
+        temporaryCleanStore: data.temporaryCleanStore || {},
+        temporaryDirtyStore: data.temporaryDirtyStore || {},
+        temporaryCompanyDirtyStore: data.temporaryCompanyDirtyStore || {},
+        DEPARTMENTS: cleanDepts,
+        updatedAt: new Date().toISOString()
+      };
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+    } catch (e) {
+      if (!isSilent) {
         console.warn('API error, falling back to LocalStorage cache:', e);
         try {
           const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -155,12 +172,41 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
         } catch (localError) {
           console.error('LocalStorage fallback error:', localError);
         }
-      } finally {
-        setIsLoading(false);
       }
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
     }
-    initData();
-  }, []);
+  }, [triggerToast]);
+
+  // --- 1) STATE SYNCHRONIZATION AND INITIALIZATION & AUTOMATIC POLLING ---
+  useEffect(() => {
+    // Initial fetch
+    fetchLatestData(false);
+
+    // Automatic real-time polling every 4 seconds
+    const intervalId = setInterval(() => {
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        fetchLatestData(true);
+      }
+    }, 4000);
+
+    // Re-fetch immediately when user returns or focuses tab
+    const handleFocus = () => {
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        fetchLatestData(true);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+    };
+  }, [fetchLatestData]);
 
   useEffect(() => {
     setRoles(prevRoles => {
@@ -270,6 +316,7 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
     setPendingRegs(newPending);
     setDepartments(newDepts);
     setWardDeliverySlips(newWardSlips);
+    prevSlipsCountRef.current = newWardSlips.length;
     setLaundryDispatches(newLaundryDispatches);
     setTemporaryCleanStore(newTempStore);
     setTemporaryDirtyStore(newTempDirtyStore);
@@ -1036,6 +1083,8 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
     handleInitTestStock,
     handleGenerateReportTestData,
     handleClearReportTestData,
-    hasSimulatedData
+    hasSimulatedData,
+    isRefreshing,
+    refetchData: () => fetchLatestData(true)
   };
 }
