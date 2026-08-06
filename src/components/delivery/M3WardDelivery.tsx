@@ -830,11 +830,7 @@ export default function M3WardDelivery({
                           </button>
                         </div>
                       </div>
-                    ) : (
-                      <div className="p-3 bg-amber-100 border border-amber-300 rounded-lg text-amber-800 text-xs font-medium text-center">
-                        ⏳ Chỉ tài khoản Điều dưỡng/Hộ lý của Khoa {activeSlip.dept} mới có quyền xác nhận hoặc từ chối nhận đồ sạch tại đây.
-                      </div>
-                    )}
+                    ) : null}
                   </div>
                 ) : isLinenOrCleanUser ? (
                   <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3 shadow-xs">

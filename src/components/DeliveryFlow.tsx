@@ -294,8 +294,8 @@ export default function DeliveryFlow({
       )}
 
       {/* Main Header with dynamic title & Operational Toolbar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-stone-200 pb-4 mb-6 gap-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center sm:border-b sm:border-stone-200 sm:pb-4 mb-2 sm:mb-6 gap-4">
+        <div className="hidden sm:flex items-center gap-2">
           <h2 className="text-sm font-extrabold text-stone-800 uppercase tracking-wider bg-stone-100/50 px-3 py-1.5 rounded-lg border border-stone-200/60 shadow-3xs">
             {activeMuc === 1 && "Quy trình giao nhận đồ dơ"}
             {activeMuc === 2 && "Giao nhận sạch với Công ty giặt"}
