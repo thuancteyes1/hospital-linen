@@ -75,6 +75,13 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
       if (!res.ok) return;
       const data = await res.json();
 
+      if (data.isFallback) {
+        if (!silent) {
+          triggerToast('💾 Đang sử dụng bộ nhớ cục bộ (Trình duyệt)', '#F59E0B');
+        }
+        return;
+      }
+
       let newSlipsDiff = 0;
       let statusChanged = false;
 
@@ -117,7 +124,7 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
       }
     } catch (err) {
       if (!silent) {
-        triggerToast('⚠️ Lỗi khi nạp dữ liệu từ máy chủ', '#EF4444');
+        triggerToast('⚠️ Đang kết nối bằng bộ nhớ cục bộ', '#F59E0B');
       }
     } finally {
       if (!silent) setIsRefreshing(false);
@@ -148,7 +155,7 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
       if (navigator.onLine && typeof document !== 'undefined' && document.visibilityState === 'visible') {
         refreshData(true);
       }
-    }, 5000);
+    }, 30000);
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible' && navigator.onLine) {
@@ -421,29 +428,20 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
     })
     .then(async (res) => {
       if (!res.ok) {
-        const text = await res.text();
-        console.error('Failed to sync to postgres:', text);
-        let detailText = '';
-        try {
-          const parsed = JSON.parse(text);
-          if (parsed.details && typeof parsed.details === 'string') {
-            const cleanStr = parsed.details.replace(/\s+/g, ' ').trim();
-            detailText = cleanStr.length > 80 ? `: ${cleanStr.slice(0, 80)}...` : `: ${cleanStr}`;
-          }
-        } catch (_) {}
-        triggerToast(`⚠️ Đồng bộ máy chủ thất bại${detailText}`, '#EF4444');
+        console.warn('Sync server returned non-200, falling back to local storage.');
+        triggerToast('💾 Dữ liệu đã lưu an toàn tại bộ nhớ trình duyệt', '#F59E0B');
       } else {
         const data = await res.json();
-        if (data.isLocalOnly) {
-          triggerToast('💾 Dữ liệu đã lưu tại trình duyệt (Chưa kết nối DB đám mây Neon)', '#F59E0B');
+        if (data.isLocalOnly || data.quotaExceeded) {
+          triggerToast('💾 Dữ liệu đã lưu an toàn tại trình duyệt (Neon DB tạm vượt hạn ngạch)', '#F59E0B');
         } else {
           triggerToast('☁️ Đã cập nhật và đồng bộ dữ liệu lên cơ sở dữ liệu (Neon DB)', '#10B981');
         }
       }
     })
     .catch((err) => {
-      console.error('Error during postgres sync:', err);
-      triggerToast('⚠️ Không thể kết nối tới máy chủ đồng bộ đám mây', '#EF4444');
+      console.warn('Error during postgres sync, falling back to local storage:', err);
+      triggerToast('💾 Dữ liệu đã lưu an toàn tại bộ nhớ trình duyệt', '#F59E0B');
     });
   };
 

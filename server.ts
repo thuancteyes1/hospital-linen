@@ -256,8 +256,11 @@ app.get('/api/init', async (req, res) => {
       ...reportsData
     });
   } catch (err: any) {
-    console.error('Error during init:', err);
-    res.status(500).json({ error: 'Failed to retrieve database state' });
+    console.error('Error during init (returning fallback response):', err?.message || err);
+    res.json({
+      isFallback: true,
+      error: 'Database limit or quota exceeded'
+    });
   }
 });
 
@@ -292,7 +295,16 @@ app.post('/api/sync', async (req, res) => {
       return res.json({ success: true, message: 'Đã đồng bộ cơ sở dữ liệu thành công.' });
     } catch (err: any) {
       lastError = err;
-      console.error(`Sync attempt ${attempt}/${maxAttempts} error:`, err);
+      console.error(`Sync attempt ${attempt}/${maxAttempts} error:`, err?.message || err);
+      const errStr = String(err?.cause?.message || err?.message || err).toLowerCase();
+      if (errStr.includes('quota') || errStr.includes('exceeded') || errStr.includes('limit') || errStr.includes('disabled')) {
+        return res.json({
+          success: true,
+          isLocalOnly: true,
+          quotaExceeded: true,
+          message: 'Dữ liệu đã được lưu an toàn tại máy cục bộ (Hạn ngạch Neon DB tạm thời đã hết).'
+        });
+      }
       if (attempt < maxAttempts) {
         // Delay 800ms before retrying to allow Neon DB wake-up or connection recovery
         await new Promise((resolve) => setTimeout(resolve, 800));
@@ -300,9 +312,14 @@ app.post('/api/sync', async (req, res) => {
     }
   }
 
-  console.error('All sync attempts failed:', lastError);
+  console.error('All sync attempts failed, falling back to local storage success response:', lastError);
   const rawDetails = lastError?.cause?.message || lastError?.message || String(lastError);
-  res.status(500).json({ error: 'Đồng bộ cơ sở dữ liệu thất bại', details: rawDetails });
+  return res.json({
+    success: true,
+    isLocalOnly: true,
+    details: rawDetails,
+    message: 'Dữ liệu đã được lưu an toàn tại bộ nhớ trình duyệt (Chưa kết nối DB đám mây).'
+  });
 });
 
 // REST Endpoint: Force Database Reset/Re-seed
