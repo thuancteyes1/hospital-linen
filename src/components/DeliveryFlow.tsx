@@ -66,8 +66,6 @@ interface DeliveryFlowProps {
   activeMuc?: 1 | 2 | 3 | 4;
   onActiveMucChange?: (muc: 1 | 2 | 3 | 4) => void;
   simulatedRole?: 'ward' | 'orderly' | 'housekeeping' | 'linen' | 'laundry' | 'clean' | 'all' | 'admin';
-  onRefetchData?: () => void;
-  isRefreshing?: boolean;
 }
 
 const DEPARTMENTS_LIST = [
@@ -107,9 +105,7 @@ export default function DeliveryFlow({
   onUpdateDeliveryStates,
   activeMuc: propActiveMuc,
   onActiveMucChange,
-  simulatedRole = 'all',
-  onRefetchData,
-  isRefreshing = false
+  simulatedRole = 'all'
 }: DeliveryFlowProps) {
   const deptsToUse = departments && departments.length > 0 ? departments : DEPARTMENTS_LIST;
   
@@ -298,7 +294,7 @@ export default function DeliveryFlow({
       )}
 
       {/* Main Header with dynamic title & Operational Toolbar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center sm:border-b sm:border-stone-200 sm:pb-4 mb-2 sm:mb-6 gap-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center sm:border-b sm:border-stone-200 sm:pb-4 mb-2 sm:mb-6 gap-4">
         <div className="hidden sm:flex items-center gap-2">
           <h2 className="text-sm font-extrabold text-stone-800 uppercase tracking-wider bg-stone-100/50 px-3 py-1.5 rounded-lg border border-stone-200/60 shadow-3xs">
             {activeMuc === 1 && "Quy trình giao nhận đồ dơ"}
@@ -308,50 +304,35 @@ export default function DeliveryFlow({
           </h2>
         </div>
 
-        {/* Sync & Operational Toolbar */}
-        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
-          {onRefetchData && (
+        {/* Operational Toolbar (Admin/Trưởng kho đồ vải only) */}
+        {(!!currentAccount?.isAdmin || currentRoleName === 'Trưởng kho đồ vải' || simulatedRole === 'admin') && (
+          <div className="flex gap-1.5 self-end sm:self-auto shrink-0">
             <button
-              type="button"
-              onClick={onRefetchData}
-              disabled={isRefreshing}
-              className="p-2 sm:px-3 sm:py-2 border border-emerald-300 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-3xs"
-              title="Bấm để tải ngay phiếu mới nhất từ các khoa phòng / xưởng giặt mà không cần đăng nhập lại"
+              onClick={handleOpenAdjustDirtyStore}
+              className="p-2 border border-stone-300 rounded-lg bg-white text-stone-600 hover:text-stone-900 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer shadow-3xs"
+              title="Cân chỉnh số lượng đồ dơ tại kho bệnh viện"
             >
-              <RefreshCw size={14} className={isRefreshing ? "animate-spin text-emerald-600" : "text-emerald-700"} />
-              <span className="hidden xs:inline">{isRefreshing ? 'Đang tải...' : 'Làm mới dữ liệu'}</span>
+              <RefreshCw size={14} />
+              Cân chỉnh Kho Dơ
             </button>
-          )}
-
-          {(!!currentAccount?.isAdmin || currentRoleName === 'Trưởng kho đồ vải' || simulatedRole === 'admin') && (
-            <div className="flex gap-1.5">
-              <button
-                onClick={handleOpenAdjustDirtyStore}
-                className="p-2 border border-stone-300 rounded-lg bg-white text-stone-600 hover:text-stone-900 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer shadow-3xs"
-                title="Cân chỉnh số lượng đồ dơ tại kho bệnh viện"
-              >
-                <RefreshCw size={14} />
-                <span className="hidden md:inline">Cân chỉnh Kho Dơ</span>
-              </button>
-              <button
-                onClick={() => setCleanupPendingType('onlyInventory')}
-                className="p-2 border border-stone-300 rounded-lg bg-white text-stone-600 hover:text-stone-900 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer shadow-3xs"
-                title="Reset toàn bộ số lượng hàng tồn kho"
-              >
-                <RotateCcw size={14} />
-                <span className="hidden md:inline">Reset Kho</span>
-              </button>
-              <button
-                onClick={() => setCleanupPendingType('all')}
-                className="p-2 border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-800 rounded-lg transition-all text-xs font-bold flex items-center gap-1 cursor-pointer shadow-3xs"
-                title="Khôi phục cài đặt gốc - Reset toàn bộ dữ liệu hệ thống"
-              >
-                <Trash2 size={14} />
-                <span className="hidden md:inline">Khôi Phục Gốc</span>
-              </button>
-            </div>
-          )}
-        </div>
+            <button
+              onClick={() => setCleanupPendingType('onlyInventory')}
+              className="p-2 border border-stone-300 rounded-lg bg-white text-stone-600 hover:text-stone-900 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer shadow-3xs"
+              title="Reset toàn bộ số lượng hàng tồn kho"
+            >
+              <RotateCcw size={14} />
+              Reset Kho
+            </button>
+            <button
+              onClick={() => setCleanupPendingType('all')}
+              className="p-2 border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-800 rounded-lg transition-all text-xs font-bold flex items-center gap-1 cursor-pointer shadow-3xs"
+              title="Khôi phục cài đặt gốc - Reset toàn bộ dữ liệu hệ thống"
+            >
+              <Trash2 size={14} />
+              Reset All
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Conditional Functional Panels Render */}
