@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Shirt, TrendingUp, BarChart3, AlertTriangle } from 'lucide-react';
+import { Shirt, TrendingUp, BarChart3, AlertTriangle, RefreshCw, Radio } from 'lucide-react';
 import { Account } from '../../types';
 
 interface HeaderProps {
@@ -14,13 +14,19 @@ interface HeaderProps {
   currentWardName: string;
   activeTab?: string;
   setActiveTab?: (tab: any) => void;
+  refreshData?: (silent?: boolean) => void;
+  isRefreshing?: boolean;
+  lastSyncedAt?: Date | null;
 }
 
 export default function Header({
   isOnline,
   currentAccount,
   currentRoleName,
-  currentWardName
+  currentWardName,
+  refreshData,
+  isRefreshing,
+  lastSyncedAt
 }: HeaderProps) {
   return (
     <header className="py-2.5 px-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-white/40 backdrop-blur-md border-b border-black/5">
@@ -38,6 +44,29 @@ export default function Header({
             <span>HospLinen<span className="font-bold text-[11px] tracking-widest bg-gradient-to-r from-[#007AFF] to-[#AF52DE] text-white px-2 py-0.5 ml-1.5 rounded-full inline-block align-middle uppercase shadow-md shadow-blue-500/15">PRO</span></span>
           </h1>
         </div>
+
+        {/* Live sync & manual refresh button on header */}
+        {refreshData && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => refreshData(false)}
+              disabled={isRefreshing || !isOnline}
+              title="Tải lại ngay lập tức dữ liệu mới nhất từ khoa phòng mà không cần đăng xuất"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-extrabold shadow-sm transition-all cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw size={13} className={isRefreshing ? "animate-spin" : ""} />
+              <span>{isRefreshing ? "Đang nạp..." : "Nạp mới dữ liệu"}</span>
+            </button>
+
+            <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200/80 rounded-lg text-[10px] font-bold">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>Live Auto 5s</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {currentAccount && (

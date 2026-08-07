@@ -34,6 +34,8 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
   const [mobileTestBarOpen, setMobileTestBarOpen] = useState(false);
   const [allocationModal, setAllocationModal] = useState<{ ma: string; ten: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(new Date());
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isReadOnly, setIsReadOnly] = useState<boolean>(() => {
     try {
@@ -64,6 +66,104 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
       window.removeEventListener('offline', handleOffline);
     };
   }, [triggerToast]);
+
+  const refreshData = async (silent = false) => {
+    if (isReadOnly || !navigator.onLine) return;
+    try {
+      if (!silent) setIsRefreshing(true);
+      const res = await fetch(`/api/init?_t=${Date.now()}`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      let newSlipsDiff = 0;
+      let statusChanged = false;
+
+      if (data.wardDeliverySlips && Array.isArray(data.wardDeliverySlips)) {
+        setWardDeliverySlips(prev => {
+          if (data.wardDeliverySlips.length > prev.length) {
+            newSlipsDiff = data.wardDeliverySlips.length - prev.length;
+          } else {
+            const prevStatusMap = new Map(prev.map(s => [s.id, s.status]));
+            const changed = data.wardDeliverySlips.some((s: WardDeliverySlip) => {
+              const oldStatus = prevStatusMap.get(s.id);
+              return oldStatus && oldStatus !== s.status;
+            });
+            if (changed) statusChanged = true;
+          }
+          return data.wardDeliverySlips;
+        });
+      }
+
+      if (data.items) setItems(data.items);
+      if (data.detailAllocations) setDetailAllocations(data.detailAllocations);
+      if (data.users) setUsers(data.users);
+      if (data.accounts) setAccounts(data.accounts);
+      if (data.history) setHistory(data.history);
+      if (data.laundryDispatches) setLaundryDispatches(data.laundryDispatches);
+      if (data.temporaryCleanStore) setTemporaryCleanStore(data.temporaryCleanStore);
+      if (data.temporaryDirtyStore) setTemporaryDirtyStore(data.temporaryDirtyStore);
+      if (data.temporaryCompanyDirtyStore) setTemporaryCompanyDirtyStore(data.temporaryCompanyDirtyStore);
+
+      setLastSyncedAt(new Date());
+
+      if (silent) {
+        if (newSlipsDiff > 0) {
+          triggerToast(`🔔 Phát hiện ${newSlipsDiff} phiếu giao nhận mới từ Khoa phòng! Dữ liệu đã tự động cập nhật.`, '#10B981');
+        } else if (statusChanged) {
+          triggerToast('🔔 Trạng thái phiếu giao nhận vừa được cập nhật từ hệ thống!', '#3B82F6');
+        }
+      } else {
+        triggerToast('🔄 Đã nạp và đồng bộ dữ liệu mới nhất thành công!', '#10B981');
+      }
+    } catch (err) {
+      if (!silent) {
+        triggerToast('⚠️ Lỗi khi nạp dữ liệu từ máy chủ', '#EF4444');
+      }
+    } finally {
+      if (!silent) setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    let channel: BroadcastChannel | null = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        channel = new BroadcastChannel('hosplinen_sync_channel');
+        channel.onmessage = (event) => {
+          if (event.data?.type === 'DATA_UPDATED') {
+            refreshData(true);
+          }
+        };
+      }
+    } catch (_) {}
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === LOCAL_STORAGE_KEY) {
+        refreshData(true);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    const intervalId = setInterval(() => {
+      if (navigator.onLine && typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        refreshData(true);
+      }
+    }, 5000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && navigator.onLine) {
+        refreshData(true);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('storage', handleStorageChange);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (channel) channel.close();
+    };
+  }, [isReadOnly]);
 
   // --- 1) STATE SYNCHRONIZATION AND INITIALIZATION ---
   useEffect(() => {
@@ -292,6 +392,14 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
       updatedAt: new Date().toISOString()
     };
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('hosplinen_sync_channel');
+        bc.postMessage({ type: 'DATA_UPDATED' });
+        bc.close();
+      }
+    } catch (_) {}
 
     // Async sync state to PostgreSQL / Neon DB
     fetch('/api/sync', {
@@ -1008,6 +1116,9 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
     temporaryCompanyDirtyStore,
     setTemporaryCompanyDirtyStore,
     isLoading,
+    isRefreshing,
+    lastSyncedAt,
+    refreshData,
     isOnline,
     isReadOnly,
     setIsReadOnly,

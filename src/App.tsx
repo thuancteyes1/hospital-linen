@@ -81,7 +81,10 @@ export default function App() {
     handleInitTestStock,
     handleGenerateReportTestData,
     handleClearReportTestData,
-    hasSimulatedData
+    hasSimulatedData,
+    refreshData,
+    isRefreshing,
+    lastSyncedAt
   } = useLinenState(triggerToast);
 
   const {
@@ -153,6 +156,9 @@ export default function App() {
           currentWardName={currentWardName}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          refreshData={refreshData}
+          isRefreshing={isRefreshing}
+          lastSyncedAt={lastSyncedAt}
         />
 
         {/* MAIN TWO COLUMN GRID LAYOUT */}
