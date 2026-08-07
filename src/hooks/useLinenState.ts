@@ -181,16 +181,26 @@ export function useLinenState(triggerToast: (text: string, color?: string) => vo
         if (!res.ok) throw new Error('API initialization failed');
         const data = await res.json();
         
-        setItems(data.items);
-        setDetailAllocations(data.detailAllocations);
-        setUsers(data.users);
-        setAccounts(data.accounts);
-        setHistory(data.history);
-        setWardDeliverySlips(data.wardDeliverySlips);
-        setLaundryDispatches(data.laundryDispatches);
-        if (data.temporaryCleanStore) setTemporaryCleanStore(data.temporaryCleanStore);
-        if (data.temporaryDirtyStore) setTemporaryDirtyStore(data.temporaryDirtyStore);
-        if (data.temporaryCompanyDirtyStore) setTemporaryCompanyDirtyStore(data.temporaryCompanyDirtyStore);
+        if (!data.items || data.items.length === 0) {
+          setItems(INITIAL_LINEN_ITEMS);
+          setDetailAllocations(INITIAL_DETAIL_ALLOCATIONS);
+          setUsers(INITIAL_USERS);
+          setAccounts(INITIAL_ACCOUNTS);
+          setHistory([]);
+          setWardDeliverySlips(INITIAL_WARD_DELIVERY_SLIPS);
+          setLaundryDispatches(INITIAL_LAUNDRY_DISPATCHES);
+        } else {
+          setItems(data.items);
+          setDetailAllocations(data.detailAllocations || {});
+          setUsers(data.users || []);
+          setAccounts(data.accounts || []);
+          setHistory(data.history || []);
+          setWardDeliverySlips(data.wardDeliverySlips || []);
+          setLaundryDispatches(data.laundryDispatches || []);
+          if (data.temporaryCleanStore) setTemporaryCleanStore(data.temporaryCleanStore);
+          if (data.temporaryDirtyStore) setTemporaryDirtyStore(data.temporaryDirtyStore);
+          if (data.temporaryCompanyDirtyStore) setTemporaryCompanyDirtyStore(data.temporaryCompanyDirtyStore);
+        }
         
         let loadedDepts = DEPARTMENTS;
         try {

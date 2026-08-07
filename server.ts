@@ -61,7 +61,7 @@ async function seedDatabaseIfEmpty() {
         hinhAnh: item.hinhAnh || null,
         trang: item.trang || 'Trang 1'
       }));
-      await tx.insert(linenItems).values(formattedItems);
+      await tx.insert(linenItems).values(formattedItems).onConflictDoNothing();
 
       // 2. Seed Department Allocations
       const formattedAllocations: any[] = [];
@@ -75,7 +75,7 @@ async function seedDatabaseIfEmpty() {
         });
       });
       if (formattedAllocations.length > 0) {
-        await tx.insert(deptAllocations).values(formattedAllocations);
+        await tx.insert(deptAllocations).values(formattedAllocations).onConflictDoNothing();
       }
 
       // 3. Seed Users and custom accounts
@@ -94,7 +94,7 @@ async function seedDatabaseIfEmpty() {
         });
       });
       if (userListToInsert.length > 0) {
-        await tx.insert(users).values(userListToInsert);
+        await tx.insert(users).values(userListToInsert).onConflictDoNothing();
       }
 
       // 4. Seed Slips
@@ -126,7 +126,7 @@ async function seedDatabaseIfEmpty() {
         items: JSON.stringify(slip.items)
       }));
       if (formattedSlips.length > 0) {
-        await tx.insert(deliverySlips).values(formattedSlips);
+        await tx.insert(deliverySlips).values(formattedSlips).onConflictDoNothing();
       }
 
       // 5. Seed Laundry Dispatches
@@ -155,7 +155,7 @@ async function seedDatabaseIfEmpty() {
         lossNote: ld.lossNote || null
       }));
       if (formattedDispatches.length > 0) {
-        await tx.insert(laundryDispatches).values(formattedDispatches);
+        await tx.insert(laundryDispatches).values(formattedDispatches).onConflictDoNothing();
       }
     });
 

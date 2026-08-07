@@ -8,7 +8,8 @@ export const getDbUrl = (): string | undefined => {
   return process.env.DATABASE_URL ||
     process.env.POSTGRES_URL ||
     process.env.POSTGRES_URL_NON_POOLING ||
-    process.env.DATABASE_PRIVATE_URL;
+    process.env.DATABASE_PRIVATE_URL ||
+    'postgresql://postgres.abjtyvdhdbuhgngtfefh:HospLinenWeb@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres';
 };
 
 export const isDbConfigured = (): boolean => {
